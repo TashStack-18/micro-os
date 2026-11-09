@@ -10,6 +10,7 @@ extern crate alloc;
 pub mod args;
 pub mod fdt;
 pub mod mem;
+pub mod research;
 pub mod rng;
 pub mod sched;
 pub mod spin;

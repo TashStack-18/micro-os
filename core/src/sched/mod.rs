@@ -12,14 +12,19 @@
 //! ```
 //!
 //! Keeping policies free of hardware details lets them be unit-tested on the
-//! host and swapped at boot (`policy=rr|prio|aging|mlfq`).
+//! host and swapped at boot (`policy=rr|prio|aging|mlfq|fcfs|sjf|srtf|hrrn`).
+//!
+//! FCFS, SJF, SRTF and HRRN are the policies compared in the R3 research
+//! study ("Fairness vs Throughput in CPU Scheduling"); see `classic.rs`.
 
+mod classic;
 mod mlfq;
 mod priority;
 mod rr;
 
 use alloc::boxed::Box;
 
+pub use classic::{Fcfs, Hrrn, Sjf, Srtf, RUN_TO_COMPLETION};
 pub use mlfq::{Mlfq, BOOST_PERIOD, MLFQ_LEVELS};
 pub use priority::{PriorityPolicy, AGING_INTERVAL, DEFAULT_PRIO, LOWEST_PRIO};
 pub use rr::RoundRobin;
@@ -68,11 +73,29 @@ pub struct SchedInfo {
     pub allot_used: u32,
     /// MLFQ: boost epoch this info was last synchronised with.
     pub epoch: u64,
+    /// Expected length of the current CPU burst, in ticks. Either the true
+    /// value (an "oracle", as in the R3 simulator) or a prediction made by
+    /// exponential averaging of past bursts (what a real OS has to do).
+    pub burst_est: u32,
+    /// Ticks of CPU consumed in the current burst.
+    pub burst_used: u32,
 }
 
 impl SchedInfo {
     pub fn new(tid: Tid, base_prio: u8) -> Self {
         Self { tid, base_prio, ..Self::default() }
+    }
+
+    /// Expected CPU still needed in the current burst (SRTF's key).
+    pub fn remaining(&self) -> u32 {
+        self.burst_est.saturating_sub(self.burst_used)
+    }
+
+    /// End of a CPU burst in prediction mode: tau' = (actual + tau) / 2,
+    /// i.e. exponential averaging with alpha = 1/2 (Silberschatz ch. 5).
+    pub fn end_burst_predicted(&mut self) {
+        self.burst_est = ((self.burst_used + self.burst_est) / 2).max(1);
+        self.burst_used = 0;
     }
 }
 
@@ -131,6 +154,10 @@ pub enum PolicyKind {
     Priority,
     PriorityAging,
     Mlfq,
+    Fcfs,
+    Sjf,
+    Srtf,
+    Hrrn,
 }
 
 impl PolicyKind {
@@ -140,8 +167,17 @@ impl PolicyKind {
             "prio" | "priority" => Some(Self::Priority),
             "aging" | "prio-aging" => Some(Self::PriorityAging),
             "mlfq" => Some(Self::Mlfq),
+            "fcfs" => Some(Self::Fcfs),
+            "sjf" => Some(Self::Sjf),
+            "srtf" => Some(Self::Srtf),
+            "hrrn" => Some(Self::Hrrn),
             _ => None,
         }
+    }
+
+    /// Policies that order the queue by (expected) burst length.
+    pub fn needs_bursts(self) -> bool {
+        matches!(self, Self::Sjf | Self::Srtf | Self::Hrrn)
     }
 }
 
@@ -151,6 +187,10 @@ pub fn build(kind: PolicyKind, quantum: u32) -> Box<dyn Policy> {
         PolicyKind::Priority => Box::new(PriorityPolicy::new(quantum, None)),
         PolicyKind::PriorityAging => Box::new(PriorityPolicy::new(quantum, Some(AGING_INTERVAL))),
         PolicyKind::Mlfq => Box::new(Mlfq::new(quantum, BOOST_PERIOD)),
+        PolicyKind::Fcfs => Box::new(Fcfs::new()),
+        PolicyKind::Sjf => Box::new(Sjf::new()),
+        PolicyKind::Srtf => Box::new(Srtf::new()),
+        PolicyKind::Hrrn => Box::new(Hrrn::new()),
     }
 }
 
@@ -163,6 +203,21 @@ mod tests {
         assert_eq!(PolicyKind::parse("mlfq"), Some(PolicyKind::Mlfq));
         assert_eq!(PolicyKind::parse("rr"), Some(PolicyKind::RoundRobin));
         assert_eq!(PolicyKind::parse("fifo"), None);
+        assert_eq!(PolicyKind::parse("srtf"), Some(PolicyKind::Srtf));
         assert_eq!(build(PolicyKind::PriorityAging, 4).name(), "PRIO+AGING");
+        assert_eq!(build(PolicyKind::Hrrn, 4).name(), "HRRN");
+    }
+
+    #[test]
+    fn exponential_averaging_tracks_bursts() {
+        let mut i = SchedInfo { burst_est: 8, ..SchedInfo::default() };
+        for _ in 0..6 {
+            i.burst_used = 2; // the task keeps running for 2 ticks per burst
+            i.end_burst_predicted();
+        }
+        assert_eq!(i.burst_est, 2, "estimate converges to the observed burst");
+        i.burst_used = 30;
+        i.end_burst_predicted();
+        assert_eq!(i.burst_est, 16, "one long burst moves the estimate half way");
     }
 }

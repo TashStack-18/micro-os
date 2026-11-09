@@ -115,7 +115,9 @@ function connect() {
 }
 
 const POLICY_NAMES = { rr: "Round Robin", prio: "Priority", aging: "Priority + aging", mlfq: "MLFQ",
-  RR: "Round Robin", PRIO: "Priority", "PRIO+AGING": "Priority + aging", MLFQ: "MLFQ" };
+  fcfs: "FCFS", sjf: "SJF", srtf: "SRTF", hrrn: "HRRN",
+  RR: "Round Robin", PRIO: "Priority", "PRIO+AGING": "Priority + aging", MLFQ: "MLFQ",
+  FCFS: "FCFS", SJF: "SJF", SRTF: "SRTF", HRRN: "HRRN" };
 
 function setStatus(s) {
   running = !!s.running;

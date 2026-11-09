@@ -30,7 +30,7 @@ TRACE = re.compile(r"#T (\d+) (\d+) (\w+)\s*(.*)")
 KV = re.compile(r"(\w+)=(\S+)")
 PROGRAM = re.compile(r'Program \{ name: "(\w+)", usage: "([^"]*)", about: "([^"]*)"')
 SAFE_NAME = re.compile(r"^[\w.-]+$")
-POLICIES = {"rr", "prio", "aging", "mlfq"}
+POLICIES = {"rr", "prio", "aging", "mlfq", "fcfs", "sjf", "srtf", "hrrn"}
 HISTORY_LIMIT = 200_000  # characters of console output replayed to new browsers
 
 

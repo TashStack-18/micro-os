@@ -14,6 +14,9 @@
 | Heap | First-fit free list with headers, splitting, coalescing | Bump, buddy, slab | Real reuse plus detectable invalid frees; bump/best-fit kept for comparison |
 | Time | `time` CSR at 10 MHz, 1 ms tick | — | Tick = scheduling quantum unit |
 | Reproducibility | QEMU `-icount shift=3,align=off,sleep=off` | Real time | Virtual time follows instruction count, so every run is identical |
+| Burst lengths for SJF/SRTF/HRRN | Two modes: *oracle* (the spawner states each job's CPU demand, as in the R3 simulator) and *predicted* (exponential averaging, α = ½, of each task's past bursts) | Oracle only | R3's stated limitation is that a real OS must estimate bursts; the shell uses prediction, the research experiment uses the oracle so results are comparable with the simulator |
+| Context-switch cost | Modelled: the dispatcher spins `switch_cost_us` (R3: 200 µs) whenever it switches to a different task | Only the real dispatcher cost | The real cost under QEMU is tiny and unlike real hardware (no caches/TLB to refill); modelling it reproduces R3's control variable |
+| Fairness measurement | Jain's index computed **in the kernel** each 250 ms over tasks present for the whole interval (R3's definition) | Lifetime CPU share | R3 found that the lifetime metric unfairly penalises RR; the interval definition is the one the study settled on |
 | Exit status | QEMU test device carries the failed-check count; `run.sh` also reads the kernel's `SHUTDOWN failed=N` / `PANIC` line | QEMU exit code only | The trace line distinguishes panic (101), timeout (124) and silent stop (125) |
 
 ## Scheduling policies (`core/src/sched`)
@@ -23,6 +26,11 @@
   task preempts at the next tick); FIFO within a level. Can starve.
 * **PRIO+AGING**: every 10 ticks spent waiting raises effective priority by
   one level. The aged level holds for the slice it is dispatched with.
+* **FCFS, SJF, SRTF, HRRN** (`core/src/sched/classic.rs`): the R3 study's
+  policies. FCFS, SJF and HRRN are non-preemptive (quantum = run to
+  completion); SRTF preempts on the next tick when a task with strictly less
+  remaining time is ready. HRRN compares (w + s)/s ratios by
+  cross-multiplication, so no floating point is used.
 * **MLFQ** (OSTEP rules): 3 levels, quanta q/2q/4q, new tasks at the top, an
   allotment summed across yields so tasks cannot game it, a boost every
   50 ticks via an epoch counter.

@@ -16,8 +16,9 @@ It also has an interactive shell for running your own small Rust programs.
 | Synchronization | `kernel/src/sync/` (IRQ lock, spinlock, mutex, semaphore) |
 | Memory allocation | `core/src/mem/` (bump, first-fit/best-fit free list) |
 | Integrated demo + tests | `kernel/src/scenarios/` (TC1–TC6 + mechanism demos) |
-| **Specialization: Track A** | Priority, Priority+aging and MLFQ schedulers, compared on one workload |
+| **Specialization: Track A + G** | Scheduler engineering: RR, Priority, Priority+aging, MLFQ, **FCFS, SJF, SRTF, HRRN**; research-to-kernel: the R3 study *Fairness vs Throughput in CPU Scheduling* re-run on the kernel ([docs/research_sync.md](docs/research_sync.md)) |
 | Bonus: system interface | `kernel/src/sys.rs`, `programs/`, interactive `shell/` |
+| Linux vs Micro-OS (§20) | `linux/compare.py`, [docs/linux_comparison.md](docs/linux_comparison.md) |
 
 ## Where everything runs
 
@@ -59,6 +60,8 @@ trace lines become the live dashboards. Stop it with Ctrl-C.
 scripts/shell.sh                  # boot into the interactive shell
 scripts/run.sh tc2                # run one test scenario, log to traces/tc2.log
 scripts/test_all.sh               # unit tests + full suite + repeatability + plots
+scripts/linux_compare.sh          # same workloads on Linux, compared (docs/linux_comparison.md)
+scripts/research.sh               # R3 research experiment on the kernel (~15 min; docs/research_sync.md)
 ```
 
 In the shell try: `help`, `progs`, `hello world`, `spin 10 &`, `spin 10 yield &`,
@@ -88,6 +91,8 @@ it from the shell.
 | `mem` | bump vs first-fit vs best-fit: success, speed, fragmentation |
 | `sched_cmp` | specialization: RR vs PRIO vs PRIO+AGING vs MLFQ |
 | `quantum_sweep` | RR quantum 1–32: switches vs response time (CA-4 link) |
+| `r3_quick` | short R3 run: checks FCFS/SJF/SRTF/HRRN and the research measurements |
+| `research` | the full R3 study on the kernel (not in `all`; use `scripts/research.sh`) |
 | `fault` | deliberate access fault → diagnostic panic with backtrace |
 | `all` | everything except `fault` (default) |
 
@@ -101,6 +106,7 @@ kernel/     the RISC-V kernel (boot, traps, scheduler, sync, memory, shell)
 scripts/    build/run/test/debug helpers (bash)
 analysis/   Python trace parser and plots
 frontend/   web control panel (server.py + static page)
+linux/      Linux comparison experiment (compare.py)
 traces/     serial logs from runs
 results/    CSV tables, plots, summary.md
 docs/       architecture, design, testing, debugging log, report

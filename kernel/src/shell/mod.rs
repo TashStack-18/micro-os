@@ -18,7 +18,7 @@ use microos_core::args::BootArgs;
 use microos_core::sched::PolicyKind;
 
 use crate::kernel::console::{self, Level};
-use crate::scheduler::{self, Config, SpawnOpts, MAX_TASKS};
+use crate::scheduler::{self, BurstInfo, Config, SpawnOpts, MAX_TASKS};
 use crate::{drivers, memory, programs, sys, timer};
 
 const CTRL_C: u8 = 0x03;
@@ -36,12 +36,15 @@ pub fn run(args: &BootArgs) -> u32 {
     // Trace events would flood the terminal; `trace on` re-enables them.
     console::set_trace(args.flag("trace", false));
     SHELL_DONE.store(false, Relaxed);
-    scheduler::begin(Config { label: "shell".into(), policy, quantum, preemptive: true });
-    scheduler::spawn("shell", SpawnOpts { prio: 0, delay_ticks: 0 }, shell_main).expect("could not start the shell");
+    // Burst-ordered policies cannot be told a program's CPU demand here,
+    // so the kernel predicts it from each task's history.
+    let bursts = if policy.needs_bursts() { BurstInfo::Predicted } else { BurstInfo::Oracle };
+    scheduler::begin(Config { label: "shell".into(), policy, quantum, preemptive: true, bursts, ..Config::default() });
+    scheduler::spawn("shell", SpawnOpts { prio: 0, ..SpawnOpts::default() }, shell_main).expect("could not start the shell");
     PANEL_MODE.store(args.flag("monitor", false), Relaxed);
     if args.flag("monitor", false) {
         let interval_ms = args.get_u64("monitor_ms").unwrap_or(250).max(20);
-        scheduler::spawn("monitor", SpawnOpts { prio: 0, delay_ticks: 0 }, move || monitor(interval_ms))
+        scheduler::spawn("monitor", SpawnOpts { prio: 0, ..SpawnOpts::default() }, move || monitor(interval_ms))
             .expect("could not start the monitor");
     }
     let r = scheduler::run();
@@ -282,7 +285,7 @@ fn run_program(words: &[&str]) {
 
     let owned: Vec<String> = args.iter().map(|a| String::from(*a)).collect();
     let (pname, main) = (prog.name, prog.main);
-    let spawned = scheduler::spawn(pname, SpawnOpts { prio, delay_ticks: 0 }, move || {
+    let spawned = scheduler::spawn(pname, SpawnOpts { prio, ..SpawnOpts::default() }, move || {
         let args: Vec<&str> = owned.iter().map(String::as_str).collect();
         let code = main(&args);
         println!("[{} pid {} exited with code {}]", pname, sys::getpid(), code);
@@ -324,7 +327,7 @@ fn sched() {
     println!("  timer ticks   {} ({} idle, CPU busy {}%)", st.ticks, st.idle_ticks, busy * 100 / st.ticks.max(1));
     println!("  dispatches    {}  preemptions {}  yields {}", st.dispatches, st.preemptions, st.yields);
     println!("  blocks        {}  wakeups {}  ready queue {}", st.blocks, st.wakeups, ready);
-    println!("  restart with another policy: scripts/shell.sh policy=mlfq|prio|aging|rr quantum=N");
+    println!("  restart with another policy: scripts/shell.sh policy=rr|prio|aging|mlfq|fcfs|sjf|srtf|hrrn quantum=N");
 }
 
 fn mem() {

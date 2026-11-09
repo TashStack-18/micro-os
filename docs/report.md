@@ -9,7 +9,7 @@ Micro-OS: a timer-driven, multi-policy educational kernel for RISC-V in Rust.
 
 ## 2. Abstract
 **TODO** (≈150 words): what was built, the specialization (Track A), headline
-results (59/59 checks; aging cuts the low-priority task's response from
+results (62/62 checks; R3 hypotheses H1–H3 reproduced on the kernel; aging cuts the low-priority task's response from
 140.3 ms to 40.2 ms; spin-yield 2.3x faster than pure spinning on one CPU), and the main
 limitation (no user mode).
 
@@ -50,13 +50,21 @@ Evidence: `results/locks.png`, the race table, prodcons.
 16 MiB first-fit free-list heap with headers, splitting and coalescing;
 bump and best-fit for comparison. Evidence: `results/allocators.png`.
 
-## 12. Specialization — Track A: scheduler engineering
-PRIO, PRIO+AGING and MLFQ on one mixed workload (3 CPU-bound, 2 interactive,
-1 low-priority batch task); quantum sweep. Evidence: `policy_compare.png`,
-`gantt_cmp_*.png`, `quantum_sweep.png`.
+## 12. Specialization — Track A (scheduler engineering) + Track G (research-to-kernel)
+Eight policies in the kernel: RR, PRIO, PRIO+AGING, MLFQ and the four from
+my CA-4 study R3 (FCFS, SJF, SRTF, HRRN). Burst lengths are either given
+(as in the R3 simulator) or predicted by exponential averaging (what a real
+OS must do; the limitation R3 named).
+
+Track G: the R3 study *Fairness vs Throughput in CPU Scheduling* re-run on
+the kernel with the same workloads, loads, 0.2 ms switch cost and 250 ms
+Jain intervals. Evidence and the simulator-vs-kernel comparison:
+`docs/research_sync.md`, `results/research_sync.md`, `results/r3_*.png`.
+Also: PRIO/aging/MLFQ on a mixed workload (`policy_compare.png`) and the
+Linux comparison (`docs/linux_comparison.md`).
 
 ## 13. Testing
-See `docs/testing.md`: 25 unit tests, 59 in-kernel checks, TC1–TC6, shell smoke test.
+See `docs/testing.md`: 33 unit tests, 62 in-kernel checks, TC1–TC6, the R3 research experiment, shell smoke test.
 
 ## 14. Results
 Copy the tables from `results/summary.md` (regenerate with `scripts/test_all.sh`).
@@ -69,8 +77,12 @@ Copy the tables from `results/summary.md` (regenerate with `scripts/test_all.sh`
 * Spinning on a uniprocessor: pure spin wasted 1.76 M iterations because a
   waiter cannot make progress while the preempted holder is off the CPU.
 * Mutex convoy: FIFO hand-off made almost every increment a context switch
-  (about 3900 contended hand-offs, 259 ms). Why barging would be faster here, and what it costs in fairness.
+  (about 3900 contended hand-offs, 261 ms). Why barging would be faster here, and what it costs in fairness.
 * Allocator trade-off: best-fit is marginally more successful but ~37% slower.
+
+* Linux comparison: see `docs/linux_comparison.md`. EEVDF reproduces our RR
+  completion order; Linux SCHED_RR (100 ms slice) behaves like FCFS; strict
+  priority starves BATCH on both; nice weighting also prevents starvation, but with large run-to-run variation.
 
 ## 16. Limitations
 See design.md "Known limitations".

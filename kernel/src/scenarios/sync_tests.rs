@@ -47,7 +47,7 @@ pub fn race(s: &mut Suite, _o: &Options) {
     let expected = WORKERS * INCREMENTS;
     for v in [Variant::Unsync, Variant::Spin, Variant::SpinYield, Variant::Mutex] {
         let c = Arc::new(Counter { racy: AtomicU64::new(0), spin: SpinLock::new(0), mutex: Mutex::new("race", 0) });
-        scheduler::begin(Config { label: format!("race_{}", v.name()), policy: PolicyKind::RoundRobin, quantum: 2, preemptive: true });
+        scheduler::begin(Config { label: format!("race_{}", v.name()), policy: PolicyKind::RoundRobin, quantum: 2, preemptive: true, ..Config::default() });
         for _ in 0..WORKERS {
             let c = c.clone();
             scheduler::spawn("INC", SpawnOpts::default(), move || {
@@ -135,7 +135,7 @@ pub fn producer_consumer(s: &mut Suite, _o: &Options) {
         sum: AtomicU64::new(0),
         max_len: AtomicUsize::new(0),
     });
-    scheduler::begin(Config { label: "prodcons".into(), policy: PolicyKind::RoundRobin, quantum: 2, preemptive: true });
+    scheduler::begin(Config { label: "prodcons".into(), policy: PolicyKind::RoundRobin, quantum: 2, preemptive: true, ..Config::default() });
     for p in 1..=2u64 {
         let bb = bb.clone();
         scheduler::spawn("PROD", SpawnOpts::default(), move || {

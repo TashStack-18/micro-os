@@ -24,6 +24,7 @@ pub mod workload;
 use alloc::{boxed::Box, collections::BTreeMap, string::String, vec::Vec};
 use core::cell::UnsafeCell;
 
+use microos_core::research::jain_bp;
 use microos_core::rng::Fnv1a;
 use microos_core::sched::{self, Leave, Pick, Policy, PolicyEvent, PolicyKind, Reason, Tid, LOWEST_PRIO};
 
@@ -31,8 +32,21 @@ use crate::sync::{IrqGuard, IrqSpinLock};
 use crate::task::{Context, KernelStack, Task, TaskState, __switch_context, STACK_SIZE};
 use crate::{arch, timer};
 
-pub const MAX_TASKS: usize = 64;
+pub const MAX_TASKS: usize = 512;
 const ORDER_CAP: usize = 8192;
+
+/// Where burst-ordered policies (SJF, SRTF, HRRN) get burst lengths from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BurstInfo {
+    /// The spawner states each task's CPU demand (like the R3 simulator).
+    Oracle,
+    /// The kernel predicts the next burst by exponential averaging of the
+    /// task's previous bursts, as a real OS must.
+    Predicted,
+}
+
+/// First guess for a task's burst before any history exists (ticks).
+pub const INITIAL_BURST_ESTIMATE: u32 = 5;
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -40,18 +54,57 @@ pub struct Config {
     pub policy: PolicyKind,
     pub quantum: u32,
     pub preemptive: bool,
+    /// Modelled context-switch cost: the dispatcher spins this long whenever
+    /// it switches to a different task than last time (R3 used 200 us).
+    pub switch_cost_us: u64,
+    pub bursts: BurstInfo,
+    /// Emit per-slice trace events (SPAWN, DISPATCH, OFF, WAKE).
+    pub trace_slices: bool,
+    /// Measurement window in ticks (0 = none): completions, busy time and
+    /// switches are recorded when it ends, as in the R3 study.
+    pub window_ticks: u64,
+    /// Length of the intervals for Jain's CPU-allocation fairness (0 = off).
+    pub fair_interval: u64,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            label: String::from("run"),
+            policy: PolicyKind::RoundRobin,
+            quantum: 4,
+            preemptive: true,
+            switch_cost_us: 0,
+            bursts: BurstInfo::Oracle,
+            trace_slices: true,
+            window_ticks: 0,
+            fair_interval: 0,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct SpawnOpts {
     pub prio: u8,
+    /// Ticks after the start of `run()` at which the task arrives.
     pub delay_ticks: u64,
+    /// Expected CPU demand in ticks, used in `BurstInfo::Oracle` mode (0 = unknown).
+    pub burst_ticks: u32,
 }
 
 impl Default for SpawnOpts {
     fn default() -> Self {
-        Self { prio: sched::DEFAULT_PRIO, delay_ticks: 0 }
+        Self { prio: sched::DEFAULT_PRIO, delay_ticks: 0, burst_ticks: 0 }
     }
+}
+
+/// What had happened by the end of the measurement window.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct WindowStats {
+    pub completed: u64,
+    /// Exact time a task was running (excludes idle and modelled switches).
+    pub busy_us: u64,
+    pub switches: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -71,6 +124,8 @@ pub struct SchedStats {
     pub blocks: u64,
     pub wakeups: u64,
     pub policy_events: u64,
+    /// Timer ticks that fell inside a modelled context switch.
+    pub switch_ticks: u64,
     /// Time spent inside the scheduler loop (picking + retiring), raw units.
     pub sched_raw: u64,
 }
@@ -84,6 +139,8 @@ pub struct TaskReport {
     pub first_run_us: u64,
     pub finish_us: u64,
     pub cpu_ticks: u64,
+    /// Exact CPU time received, in microseconds.
+    pub cpu_us: u64,
     pub dispatches: u64,
     pub preemptions: u64,
     pub yields: u64,
@@ -103,6 +160,7 @@ impl TaskReport {
             first_run_us: t.m.first_run_us.unwrap_or(t.m.finish_us),
             finish_us: t.m.finish_us,
             cpu_ticks: t.m.cpu_ticks,
+            cpu_us: timer::raw_to_ns(t.m.cpu_raw) / 1000,
             dispatches: t.m.dispatches,
             preemptions: t.m.preemptions,
             yields: t.m.yields,
@@ -139,6 +197,11 @@ pub struct RunReport {
     pub order: Vec<Tid>,
     pub elapsed_us: u64,
     pub deadlock: bool,
+    /// Dispatches that switched to a different task than the previous one.
+    pub switches: u64,
+    /// Mean Jain's index over fairness intervals, in basis points.
+    pub fairness_bp: Option<u64>,
+    pub window: Option<WindowStats>,
 }
 
 impl RunReport {
@@ -190,6 +253,18 @@ struct Sched {
     order: Vec<Tid>,
     start_us: u64,
     deadlock: bool,
+    /// `run()` has started: arrivals, ticks and windows count from here.
+    started: bool,
+    /// The dispatcher is paying the modelled switch cost right now.
+    switching: bool,
+    /// Exact time any task was running since run() started (raw units).
+    busy_raw: u64,
+    run_start_tick: u64,
+    last_tid: Option<Tid>,
+    switches: u64,
+    fair_sum_bp: u64,
+    fair_intervals: u64,
+    window: Option<WindowStats>,
 }
 
 static SCHED: IrqSpinLock<Option<Sched>> = IrqSpinLock::new("scheduler", None);
@@ -225,6 +300,15 @@ pub fn begin(cfg: Config) {
         order: Vec::new(),
         start_us: timer::now_us(),
         deadlock: false,
+        started: false,
+        switching: false,
+        busy_raw: 0,
+        run_start_tick: 0,
+        last_tid: None,
+        switches: 0,
+        fair_sum_bp: 0,
+        fair_intervals: 0,
+        window: None,
     });
 }
 
@@ -249,9 +333,16 @@ where
     s.next_tid += 1;
     let prio = opts.prio.min(LOWEST_PRIO);
     let mut task = Box::new(Task::new(tid, name, prio, entry, stack, task_trampoline as extern "C" fn() -> ! as usize));
-    ktrace!("SPAWN", "tid={} name={} prio={} delay={}", tid, name, prio, opts.delay_ticks);
+    task.sched.burst_est = match (s.cfg.bursts, opts.burst_ticks) {
+        (BurstInfo::Oracle, b) if b > 0 => b,
+        _ => INITIAL_BURST_ESTIMATE,
+    };
+    if s.cfg.trace_slices {
+        ktrace!("SPAWN", "tid={} name={} prio={} delay={}", tid, name, prio, opts.delay_ticks);
+    }
     if opts.delay_ticks > 0 {
-        task.wake_at = timer::ticks() + opts.delay_ticks;
+        // Before run() starts the delay is kept relative; run() rebases it.
+        task.wake_at = if s.started { timer::ticks() } else { 0 } + opts.delay_ticks;
         s.sleepers.push(tid);
         s.tasks.insert(tid, task);
     } else {
@@ -265,6 +356,7 @@ where
 /// then tear the run down and return its measurements.
 pub fn run() -> RunReport {
     let _irq = IrqGuard::new();
+    start_clock();
     loop {
         match pick() {
             Step::Dispatch(ctx) => {
@@ -292,6 +384,26 @@ pub fn run() -> RunReport {
     finish()
 }
 
+/// Arrivals, the measurement window and fairness intervals all count from
+/// the moment the scheduler loop starts, not from when tasks were created.
+fn start_clock() {
+    let mut g = SCHED.lock();
+    let s = g.as_mut().expect("scheduler::run without begin");
+    let base = timer::ticks();
+    for tid in &s.sleepers {
+        if let Some(t) = s.tasks.get_mut(tid) {
+            t.wake_at += base;
+        }
+    }
+    for t in s.tasks.values_mut() {
+        if t.m.arrived {
+            t.fair_snap = Some(t.m.cpu_raw);
+        }
+    }
+    s.run_start_tick = base;
+    s.started = true;
+}
+
 enum Step {
     Dispatch(*const Context),
     Idle,
@@ -301,14 +413,53 @@ enum Step {
 
 fn pick() -> Step {
     let t0 = timer::now_raw();
-    let mut g = SCHED.lock();
-    let s = g.as_mut().expect("scheduler::run without begin");
-    if s.tasks.is_empty() {
-        return Step::Done;
-    }
-    let Some(Pick { tid, level }) = s.policy.pick_next(timer::ticks()) else {
-        return if s.sleepers.is_empty() { Step::Deadlock } else { Step::Idle };
+    let (tid, level, cost) = {
+        let mut g = SCHED.lock();
+        let s = g.as_mut().expect("scheduler::run without begin");
+        if s.tasks.is_empty() {
+            return Step::Done;
+        }
+        let Some(Pick { tid, level }) = s.policy.pick_next(timer::ticks()) else {
+            return if s.sleepers.is_empty() { Step::Deadlock } else { Step::Idle };
+        };
+        let mut cost = 0;
+        if s.last_tid.is_some_and(|last| last != tid) {
+            s.switches += 1;
+            cost = s.cfg.switch_cost_us;
+        }
+        s.last_tid = Some(tid);
+        s.stats.sched_raw += timer::now_raw() - t0;
+        (tid, level, cost)
     };
+    if cost > 0 {
+        switch_delay(cost);
+    }
+    dispatch(tid, level)
+}
+
+/// Modelled context-switch cost (cache/TLB refill on real hardware): the CPU
+/// does no useful work for `us` microseconds. Interrupts stay enabled, so a
+/// timer tick that falls inside it is accounted as switch time instead of
+/// being credited to the next task.
+fn switch_delay(us: u64) {
+    if let Some(s) = SCHED.lock().as_mut() {
+        s.switching = true;
+    }
+    let until = timer::now_us() + us;
+    arch::intr_on();
+    while timer::now_us() < until {
+        core::hint::spin_loop();
+    }
+    arch::intr_off();
+    if let Some(s) = SCHED.lock().as_mut() {
+        s.switching = false;
+    }
+}
+
+fn dispatch(tid: Tid, level: u8) -> Step {
+    let t0 = timer::now_raw();
+    let mut g = SCHED.lock();
+    let s = g.as_mut().expect("scheduler state vanished");
     let now = timer::now_us();
     let t = s.tasks.get_mut(&tid).expect("policy picked an unknown tid");
     assert_eq!(t.state, TaskState::Ready, "policy picked tid {} which is {}", tid, t.state.as_str());
@@ -321,12 +472,15 @@ fn pick() -> Step {
     t.m.max_wait_us = t.m.max_wait_us.max(waited);
     t.m.first_run_us.get_or_insert(now);
     t.m.dispatches += 1;
+    t.run_since_raw = timer::now_raw();
     s.current = Some(tid);
     s.stats.dispatches += 1;
     if s.order.len() < ORDER_CAP {
         s.order.push(tid);
     }
-    ktrace!("DISPATCH", "tid={} name={} lvl={} q={} waited={}", tid, t.name, level, t.quantum, waited);
+    if s.cfg.trace_slices {
+        ktrace!("DISPATCH", "tid={} name={} lvl={} q={} waited={}", tid, t.name, level, t.quantum, waited);
+    }
     let ctx: *const Context = &t.ctx;
     s.stats.sched_raw += timer::now_raw() - t0;
     Step::Dispatch(ctx)
@@ -342,15 +496,23 @@ fn retire_current() {
         let s = g.as_mut().expect("scheduler state vanished");
         let tid = s.current.take().expect("switched back without a current task");
         let t = s.tasks.get_mut(&tid).expect("current task missing");
+        let ran_raw = t0 - t.run_since_raw;
+        t.m.cpu_raw += ran_raw;
+        s.busy_raw += ran_raw;
         if !t.stack.canary_intact() {
             panic!("stack overflow in task {} '{}': canary overwritten", tid, t.name);
         }
         let (ran, why, state) = (t.slice_used, t.leave, t.state);
+        if s.cfg.bursts == BurstInfo::Predicted && matches!(why, Leave::Blocked | Leave::Exited) {
+            t.sched.end_burst_predicted();
+        }
         if let Some(ev) = s.policy.on_descheduled(&mut t.sched, ran, why) {
             trace_policy_event(ev);
             s.stats.policy_events += 1;
         }
-        ktrace!("OFF", "tid={} why={} ran={}", tid, why.as_str(), ran);
+        if s.cfg.trace_slices {
+            ktrace!("OFF", "tid={} why={} ran={}", tid, why.as_str(), ran);
+        }
         match state {
             TaskState::Ready => {
                 let reason = if why == Leave::Preempted {
@@ -373,8 +535,8 @@ fn retire_current() {
                 let r = TaskReport::from_task(&task);
                 ktrace!(
                     "EXIT",
-                    "tid={} name={} prio={} arrival={} first={} finish={} cpu={} disp={} pre={} yld={} blk={} wait={} maxwait={} stack={}",
-                    r.tid, r.name, r.prio, r.arrival_us, r.first_run_us, r.finish_us, r.cpu_ticks,
+                    "tid={} name={} prio={} arrival={} first={} finish={} cpu={} cpu_us={} disp={} pre={} yld={} blk={} wait={} maxwait={} stack={}",
+                    r.tid, r.name, r.prio, r.arrival_us, r.first_run_us, r.finish_us, r.cpu_ticks, r.cpu_us,
                     r.dispatches, r.preemptions, r.yields, r.blocks, r.wait_us, r.max_wait_us, r.stack_used
                 );
                 s.finished.push(r);
@@ -412,11 +574,26 @@ fn finish() -> RunReport {
     let elapsed_us = timer::now_us() - s.start_us;
     let st = s.stats;
     let sched_ns = timer::raw_to_ns(st.sched_raw) / st.dispatches.max(1);
+    let fairness_bp = (s.fair_intervals > 0).then(|| s.fair_sum_bp / s.fair_intervals);
+    // A run that finished before its window closed: the window saw everything.
+    let window = match (s.cfg.window_ticks, s.window) {
+        (0, _) => None,
+        (_, Some(w)) => Some(w),
+        (_, None) => Some(WindowStats {
+            completed: s.finished.len() as u64,
+            busy_us: timer::raw_to_ns(s.busy_raw) / 1000,
+            switches: s.switches,
+        }),
+    };
+    let w = window.unwrap_or_default();
     ktrace!(
         "RUN_END",
-        "run={} elapsed_us={} dispatches={} preemptions={} yields={} blocks={} wakeups={} ticks={} idle={} sched_ns={} deadlock={}",
+        "run={} elapsed_us={} dispatches={} preemptions={} yields={} blocks={} wakeups={} ticks={} idle={} sched_ns={} deadlock={} \
+         switches={} switch_us={} fair_bp={} fair_n={} window={} win_done={} win_busy_us={} win_switches={}",
         s.cfg.label, elapsed_us, st.dispatches, st.preemptions, st.yields, st.blocks, st.wakeups,
-        st.ticks, st.idle_ticks, sched_ns, s.deadlock as u8
+        st.ticks, st.idle_ticks, sched_ns, s.deadlock as u8,
+        s.switches, s.cfg.switch_cost_us, fairness_bp.unwrap_or(0), s.fair_intervals, s.cfg.window_ticks,
+        w.completed, w.busy_us, w.switches
     );
     RunReport {
         label: s.cfg.label,
@@ -428,6 +605,9 @@ fn finish() -> RunReport {
         order: s.order,
         elapsed_us,
         deadlock: s.deadlock,
+        switches: s.switches,
+        fairness_bp,
+        window,
     }
 }
 
@@ -444,6 +624,40 @@ fn make_ready(s: &mut Sched, tid: Tid, reason: Reason) {
     t.state = TaskState::Ready;
     t.m.ready_since_us = now;
     s.policy.enqueue(&mut t.sched, reason, timer::ticks());
+}
+
+/// R3 measurements, evaluated on every tick from the timer interrupt.
+fn account_window_and_fairness(s: &mut Sched, tick: u64) {
+    let since = tick - s.run_start_tick;
+    if s.cfg.window_ticks > 0 && since == s.cfg.window_ticks {
+        s.window = Some(WindowStats {
+            completed: s.finished.len() as u64,
+            busy_us: timer::raw_to_ns(s.busy_raw) / 1000,
+            switches: s.switches,
+        });
+    }
+    let iv = s.cfg.fair_interval;
+    if iv == 0 || since == 0 || since % iv != 0 {
+        return;
+    }
+    // Jain's index over the exact CPU time received in this interval by the
+    // tasks that were present for all of it (arrived before it began, still here).
+    let (mut n, mut sum, mut sum_sq) = (0u64, 0u64, 0u128);
+    for t in s.tasks.values_mut() {
+        if let Some(snap) = t.fair_snap {
+            let x = (t.m.cpu_raw - snap) / 10; // microseconds
+            n += 1;
+            sum += x;
+            sum_sq += x as u128 * x as u128;
+        }
+        if t.m.arrived {
+            t.fair_snap = Some(t.m.cpu_raw);
+        }
+    }
+    if n > 0 && sum > 0 {
+        s.fair_sum_bp += jain_bp(n, sum, sum_sq);
+        s.fair_intervals += 1;
+    }
 }
 
 fn trace_policy_event(ev: PolicyEvent) {
@@ -464,6 +678,9 @@ pub fn on_timer_interrupt() {
     {
         let mut g = SCHED.lock();
         let Some(s) = g.as_mut() else { return };
+        if !s.started {
+            return;
+        }
         s.stats.ticks += 1;
 
         let mut i = 0;
@@ -472,7 +689,9 @@ pub fn on_timer_interrupt() {
             if s.tasks[&tid].wake_at <= tick {
                 s.sleepers.remove(i);
                 s.stats.wakeups += 1;
-                ktrace!("WAKE", "tid={} by=timer", tid);
+                if s.cfg.trace_slices {
+                    ktrace!("WAKE", "tid={} by=timer", tid);
+                }
                 make_ready(s, tid, Reason::Woken);
             } else {
                 i += 1;
@@ -485,11 +704,18 @@ pub fn on_timer_interrupt() {
         }
 
         match s.current {
+            None if s.switching => s.stats.switch_ticks += 1,
             None => s.stats.idle_ticks += 1,
             Some(tid) => {
                 let t = s.tasks.get_mut(&tid).expect("current task missing");
+                let now_raw = timer::now_raw();
+                let ran_raw = now_raw - t.run_since_raw;
+                t.m.cpu_raw += ran_raw;
+                s.busy_raw += ran_raw;
+                t.run_since_raw = now_raw;
                 t.m.cpu_ticks += 1;
                 t.slice_used += 1;
+                t.sched.burst_used = t.sched.burst_used.saturating_add(1);
                 let expired = t.slice_used >= t.quantum;
                 if s.cfg.preemptive && t.state == TaskState::Running && (expired || s.policy.should_preempt(&t.sched)) {
                     t.state = TaskState::Ready;
@@ -498,6 +724,7 @@ pub fn on_timer_interrupt() {
                 }
             }
         }
+        account_window_and_fairness(s, tick);
     }
     if resched {
         // Returns when this task is dispatched again; trap.S then restores
@@ -613,7 +840,9 @@ pub(crate) fn wake(tid: Tid) {
     }
     s.sleepers.retain(|&x| x != tid);
     s.stats.wakeups += 1;
-    ktrace!("WAKE", "tid={} by={}", tid, s.current.unwrap_or(0));
+    if s.cfg.trace_slices {
+        ktrace!("WAKE", "tid={} by={}", tid, s.current.unwrap_or(0));
+    }
     make_ready(s, tid, Reason::Woken);
 }
 
@@ -622,6 +851,16 @@ pub fn current_tid() -> Option<Tid> {
 }
 
 /// CPU ticks consumed so far by the calling task.
+/// Exact CPU time received so far by the calling task, in microseconds
+/// (measured with the time CSR, not sampled per tick).
+pub fn current_cpu_us() -> u64 {
+    let g = SCHED.lock();
+    g.as_ref()
+        .and_then(|s| s.current.map(|tid| &s.tasks[&tid]))
+        .map(|t| timer::raw_to_ns(t.m.cpu_raw + (timer::now_raw() - t.run_since_raw)) / 1000)
+        .unwrap_or(0)
+}
+
 pub fn current_cpu_ticks() -> u64 {
     let g = SCHED.lock();
     g.as_ref().and_then(|s| s.current.map(|tid| s.tasks[&tid].m.cpu_ticks)).unwrap_or(0)

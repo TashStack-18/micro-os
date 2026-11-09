@@ -15,7 +15,7 @@ use crate::scheduler::{self, Config, SpawnError, SpawnOpts, MAX_TASKS};
 use crate::sync::{Mutex, SyncError};
 
 fn config(label: &str) -> Config {
-    Config { label: label.into(), policy: PolicyKind::RoundRobin, quantum: 4, preemptive: true }
+    Config { label: label.into(), policy: PolicyKind::RoundRobin, quantum: 4, preemptive: true, ..Config::default() }
 }
 
 fn encode(r: Result<(), SyncError>) -> u8 {

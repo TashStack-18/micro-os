@@ -37,10 +37,10 @@ pub fn tc4_stress(s: &mut Suite, o: &Options) {
         }
     }
 
-    scheduler::begin(Config { label: "tc4".into(), policy: o.policy, quantum: o.quantum, preemptive: true });
+    scheduler::begin(Config { label: "tc4".into(), policy: o.policy, quantum: o.quantum, preemptive: true, ..Config::default() });
     for i in 0..WORKERS {
         let sh = shared.clone();
-        scheduler::spawn("W", SpawnOpts { prio: (i % 8) as u8, delay_ticks: (i % 4) as u64 }, move || {
+        scheduler::spawn("W", SpawnOpts { prio: (i % 8) as u8, delay_ticks: (i % 4) as u64, ..SpawnOpts::default() }, move || {
             let mut rng = XorShift64::new(i as u64 + 1);
             for round in 0..ROUNDS {
                 *sh.counter.lock() += 1;

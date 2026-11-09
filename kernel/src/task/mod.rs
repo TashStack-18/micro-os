@@ -60,6 +60,8 @@ pub struct TaskMetrics {
     pub first_run_us: Option<u64>,
     pub finish_us: u64,
     pub cpu_ticks: u64,
+    /// Exact CPU time in raw timebase units (100 ns).
+    pub cpu_raw: u64,
     pub dispatches: u64,
     pub preemptions: u64,
     pub yields: u64,
@@ -88,6 +90,11 @@ pub struct Task {
     pub wake_at: u64,
     /// Set by Ctrl-C in the shell; programs check it cooperatively.
     pub cancel: bool,
+    /// Exact CPU time (raw units) at the start of the current fairness interval
+    /// (None if the task arrived during the interval, so it is not counted for it).
+    pub fair_snap: Option<u64>,
+    /// Time CSR value when the task last started running.
+    pub run_since_raw: u64,
     pub m: TaskMetrics,
 }
 
@@ -109,6 +116,8 @@ impl Task {
             leave: Leave::Yielded,
             wake_at: 0,
             cancel: false,
+            fair_snap: None,
+            run_since_raw: 0,
             m: TaskMetrics::default(),
         }
     }

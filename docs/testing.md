@@ -2,19 +2,22 @@
 
 Run everything: `scripts/test_all.sh` (results go to `traces/` and `results/`).
 
-## Level 1 — unit tests on the host (`cd core && cargo test`): 25 tests
+## Level 1 — unit tests on the host (`cd core && cargo test`): 33 tests
 
 | Module | Tests |
 |---|---|
 | `sched::rr` | FIFO rotation, quantum clamped to ≥ 1 |
 | `sched::priority` | highest first + FIFO ties, preempt only for higher, aging lifts 7→2 after 50 ticks, no aging when disabled |
 | `sched::mlfq` | CPU-bound task sinks level by level, early yields cannot game the allotment, higher queue preempts, boost resets |
+| `sched::classic` (R3) | FCFS arrival order and no preemption; SJF shortest-first with FIFO ties; SRTF preempts only for strictly shorter remaining time; HRRN lets a long-waiting job overtake |
+| `sched` | exponential averaging of burst estimates converges and reacts to a long burst |
+| `research` (R3) | generated load matches ρ for both workloads; bimodal mix is 75/25 and seed-deterministic; Jain's index extremes |
 | `mem::bump` | alignment, reset only when empty, exhaustion, rejected frees |
 | `mem::freelist` | full coalescing, large alignments, double/foreign/misaligned free rejected, exhaustion and recovery, best-fit picks the tightest hole, 20 000-step randomized test against a shadow model (no overlap, no payload corruption) |
 | `spin` | mutual exclusion over 4 real threads × 20 000, `try_lock`, relax callback |
 | `fdt`, `args`, `rng` | command-line parsing, DTB walking, malformed blobs, determinism |
 
-## Level 2/3 — mechanism and integration tests in the kernel (`scripts/run.sh all`): 59 checks
+## Level 2/3 — mechanism and integration tests in the kernel (`scripts/run.sh all`): 62 checks
 
 | Required case | Scenario | Checks |
 |---|---|---|
@@ -28,23 +31,31 @@ Run everything: `scripts/test_all.sh` (results go to `traces/` and `results/`).
 | Synchronization | `race`, `prodcons` | race loses updates; spin, spin-yield and mutex are exact; bounded buffer conserves items and respects capacity |
 | Memory | `mem` | every allocator reclaims everything; free list beats bump on mixed sizes |
 | Specialization | `sched_cmp`, `quantum_sweep` | PRIO starves BATCH, aging fixes it, MLFQ latency ≤ RR; switch count falls as q grows |
+| R3 policies (quick) | `r3_quick` | every generated job completes; FCFS/SJF/HRRN are never preempted; SRTF preempts on a shorter arrival |
+| R3 research (full) | `test=research` / `scripts/research.sh` | 132 runs; H1–H3 scored (all supported); see `docs/research_sync.md` |
 | Shell | `scripts/shell_smoke.sh` | scripted session: programs, background tasks, ps/sched/mem, clean exit |
+
+## Linux comparison (§20)
+
+`scripts/linux_compare.sh` runs the tc2 and sched_cmp workloads as Linux
+processes pinned to one CPU (EEVDF, EEVDF+nice, SCHED_RR, SCHED_RR+priority),
+5 repetitions each. Results and discussion: `docs/linux_comparison.md`.
 
 ## Latest results
 
 From `results/summary.md` (deterministic mode):
 
-* Checks: **59 passed, 0 failed**. Unit tests: **25 passed**.
+* Checks: **62 passed, 0 failed**. Unit tests: **33 passed**.
 * Two boots: logs byte-identical.
 * Race: unsynchronized lost **2568 of 4000** increments; every lock gave 4000.
 * Lock cost: spin-yield 55 ms, pure spin 126 ms (1.76 M wasted spins),
-  mutex 259 ms (about 3900 contended hand-offs, each one a context switch:
+  mutex 261 ms (about 3900 contended hand-offs, each one a context switch:
   the FIFO hand-off convoy).
 * Allocators (mixed sizes): bump 1608 successes / 828 failures; first-fit
   2097 / 3; best-fit 2099 / 2, but best-fit is ~37% slower per operation.
 * Policies (same workload): the low-priority BATCH task first runs after
   **140.3 ms** under PRIO but **40.2 ms** with aging (3.5x sooner).
-  Interactive scheduling latency: RR 10.3 ms, MLFQ 7.2 ms, PRIO 0.05 ms.
+  Interactive scheduling latency: RR 10.4 ms, MLFQ 7.2 ms, PRIO 0.05 ms.
 
 Exact figures come from `results/summary.md` and `results/cmp.csv`; they
 are deterministic for a given kernel binary, so regenerate them with

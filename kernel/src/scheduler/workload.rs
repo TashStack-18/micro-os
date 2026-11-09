@@ -1,6 +1,6 @@
 //! Synthetic task bodies with controlled CPU and sleep behaviour.
 
-use super::{current_cpu_ticks, sleep_ticks, yield_now};
+use super::{current_cpu_ticks, current_cpu_us, sleep_ticks, yield_now};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Work {
@@ -48,6 +48,16 @@ pub fn cpu_burst(ticks: u64) {
     let start = current_cpu_ticks();
     while current_cpu_ticks() - start < ticks {
         spin(500);
+    }
+}
+
+/// Busy-loop until the calling task has received `us` microseconds of CPU,
+/// measured exactly. Used by the research workload, where time spent in
+/// context switches must not count as the job's own work.
+pub fn cpu_burst_us(us: u64) {
+    let start = current_cpu_us();
+    while current_cpu_us() - start < us {
+        spin(200);
     }
 }
 

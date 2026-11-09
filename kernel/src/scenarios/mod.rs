@@ -16,6 +16,7 @@ macro_rules! check {
 
 mod failure;
 mod mem_tests;
+mod research;
 mod sched_tests;
 mod stress;
 mod sync_tests;
@@ -58,7 +59,7 @@ impl Options {
         let policy = match args.get("policy") {
             None => PolicyKind::RoundRobin,
             Some(name) => PolicyKind::parse(name).unwrap_or_else(|| {
-                kwarn!("unknown policy '{}', using rr (valid: rr prio aging mlfq)", name);
+                kwarn!("unknown policy '{}', using rr (valid: rr prio aging mlfq fcfs sjf srtf hrrn)", name);
                 PolicyKind::RoundRobin
             }),
         };
@@ -82,7 +83,14 @@ const ALL: &[(&str, Scenario)] = &[
     ("mem", mem_tests::allocator_comparison),
     ("sched_cmp", sched_tests::policy_comparison),
     ("quantum_sweep", sched_tests::quantum_sweep),
+    ("r3_quick", r3_quick),
 ];
+
+/// Small R3 run inside the regular suite: checks the new policies and the
+/// research measurements work. The full experiment is `test=research`.
+fn r3_quick(s: &mut Suite, _o: &Options) {
+    research::run(s, research::Params::quick());
+}
 
 /// Run the named scenario (or `all`); returns the number of failed checks.
 pub fn run(test: &str, args: &BootArgs) -> u32 {
@@ -100,6 +108,10 @@ pub fn run(test: &str, args: &BootArgs) -> u32 {
             failure::deliberate_fault();
         }
         "shell" => return crate::shell::run(args),
+        "research" => {
+            banner("research");
+            research::run(&mut suite, research::Params::full(args));
+        }
         name => match ALL.iter().find(|(n, _)| *n == name) {
             Some((n, f)) => {
                 banner(n);
@@ -146,10 +158,10 @@ impl Spec {
 
 /// Run one workload under one scheduler configuration and print its report.
 pub fn run_specs(label: String, policy: PolicyKind, quantum: u32, preemptive: bool, specs: &[Spec]) -> RunReport {
-    scheduler::begin(Config { label, policy, quantum, preemptive });
+    scheduler::begin(Config { label, policy, quantum, preemptive, ..Config::default() });
     for s in specs {
         let work = s.work;
-        scheduler::spawn(s.name, SpawnOpts { prio: s.prio, delay_ticks: s.delay }, move || work.run())
+        scheduler::spawn(s.name, SpawnOpts { prio: s.prio, delay_ticks: s.delay, burst_ticks: work.cpu_demand() as u32 }, move || work.run())
             .expect("spawn failed");
     }
     let r = scheduler::run();
@@ -159,8 +171,8 @@ pub fn run_specs(label: String, policy: PolicyKind, quantum: u32, preemptive: bo
 
 pub fn print_report(r: &RunReport) {
     kinfo!(
-        "run '{}': policy={} q={} preemptive={} elapsed={}us dispatches={} preemptions={} yields={} blocks={}{}",
-        r.label, r.policy, r.quantum, r.preemptive, r.elapsed_us, r.stats.dispatches, r.stats.preemptions,
+        "run '{}': policy={} q={} preemptive={} elapsed={}us dispatches={} switches={} preemptions={} yields={} blocks={}{}",
+        r.label, r.policy, r.quantum, r.preemptive, r.elapsed_us, r.stats.dispatches, r.switches, r.stats.preemptions,
         r.stats.yields, r.stats.blocks, if r.deadlock { " DEADLOCK" } else { "" }
     );
     if r.tasks.len() > 12 {
