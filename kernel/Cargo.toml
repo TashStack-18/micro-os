@@ -1,0 +1,20 @@
+[package]
+name = "microos"
+version = "0.1.0"
+edition = "2021"
+description = "Educational RISC-V Micro-OS kernel (CA-6)"
+
+[dependencies]
+microos-core = { path = "../core" }
+
+[profile.dev]
+panic = "abort"
+
+# Runs use the release profile, but keep symbols for addr2line/GDB and keep
+# arithmetic-overflow and debug_assert! checks on: they catch kernel bugs early.
+[profile.release]
+panic = "abort"
+opt-level = 2
+debug = true
+overflow-checks = true
+debug-assertions = true

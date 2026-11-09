@@ -1,0 +1,5 @@
+ts,tick,variant,result,expected,lost,elapsed_us,contended,spins,wait_us,preemptions,yields,blocks
+1148147,1017,unsync,1432,4000,2568,53521,0,0,0,24,0,0
+1274318,1142,spin,4000,4000,0,125755,3,1759728,0,60,0,0
+1329845,1195,spin_yield,4000,4000,0,55105,3,36,0,24,36,0
+1588791,1451,mutex,4000,4000,0,258528,3902,0,685464,1,0,3902

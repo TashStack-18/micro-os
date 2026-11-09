@@ -1,0 +1,7 @@
+[package]
+name = "microos-core"
+version = "0.1.0"
+edition = "2021"
+description = "Hardware-independent Micro-OS mechanisms (allocators, scheduling policies, spinlock, DTB parsing), unit-tested on the host."
+
+[dependencies]

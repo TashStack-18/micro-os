@@ -1,0 +1,6 @@
+[build]
+target = "riscv64gc-unknown-none-elf"
+
+[target.riscv64gc-unknown-none-elf]
+# Frame pointers make the panic handler's backtrace walk possible.
+rustflags = ["-C", "force-frame-pointers=yes"]

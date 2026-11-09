@@ -1,0 +1,302 @@
+//! Interactive command shell on the serial console (`test=shell`).
+//!
+//! The shell is itself a task (priority 0). It polls the UART once per
+//! timer tick and sleeps in between, so programs it starts get the CPU.
+//! Foreground programs are waited for (Ctrl-C asks them to stop);
+//! programs started with a trailing `&` run in the background.
+//!
+//! With `monitor=1` a second task emits a `#T SNAP` line every
+//! `monitor_ms` (default 250) describing all tasks, the scheduler and the
+//! heap; the web front end (`frontend/server.py`) draws its live views
+//! from these.
+
+use alloc::{string::String, vec::Vec};
+use core::fmt::Write;
+use core::sync::atomic::{AtomicBool, Ordering::Relaxed};
+
+use microos_core::args::BootArgs;
+use microos_core::sched::PolicyKind;
+
+use crate::kernel::console::{self, Level};
+use crate::scheduler::{self, Config, SpawnOpts, MAX_TASKS};
+use crate::{memory, programs, sys, timer};
+
+const CTRL_C: u8 = 0x03;
+const BACKSPACE: u8 = 0x08;
+const DELETE: u8 = 0x7f;
+
+/// Set when the shell exits, so the monitor task stops too.
+static SHELL_DONE: AtomicBool = AtomicBool::new(false);
+
+pub fn run(args: &BootArgs) -> u32 {
+    let policy = args.get("policy").and_then(PolicyKind::parse).unwrap_or(PolicyKind::RoundRobin);
+    let quantum = args.get_u64("quantum").unwrap_or(4).clamp(1, 1000) as u32;
+    // Trace events would flood the terminal; `trace on` re-enables them.
+    console::set_trace(args.flag("trace", false));
+    SHELL_DONE.store(false, Relaxed);
+    scheduler::begin(Config { label: "shell".into(), policy, quantum, preemptive: true });
+    scheduler::spawn("shell", SpawnOpts { prio: 0, delay_ticks: 0 }, shell_main).expect("could not start the shell");
+    if args.flag("monitor", false) {
+        let interval_ms = args.get_u64("monitor_ms").unwrap_or(250).max(20);
+        scheduler::spawn("monitor", SpawnOpts { prio: 0, delay_ticks: 0 }, move || monitor(interval_ms))
+            .expect("could not start the monitor");
+    }
+    let r = scheduler::run();
+    kinfo!("shell session over: {} tasks ran, {} dispatches, {} preemptions", r.tasks.len(), r.stats.dispatches, r.stats.preemptions);
+    0
+}
+
+fn shell_main() {
+    println!();
+    println!("Micro-OS shell - type 'help' for commands, 'progs' for programs, 'exit' to power off.");
+    let mut line = String::new();
+    loop {
+        print!("microos> ");
+        read_line(&mut line);
+        let words: Vec<&str> = line.split_whitespace().collect();
+        let Some((&cmd, rest)) = words.split_first() else { continue };
+        match cmd {
+            "help" | "?" => help(),
+            "progs" | "ls" => list_programs(),
+            "run" => run_program(rest),
+            "ps" => ps(),
+            "top" => top(),
+            "sched" => sched(),
+            "mem" => mem(),
+            "uptime" => println!("up {} ms, {} timer ticks of {} us", sys::uptime_ms(), timer::ticks(), timer::tick_us()),
+            "kill" => kill(rest),
+            "trace" => set_trace(rest),
+            "log" => set_log(rest),
+            "echo" => println!("{}", rest.join(" ")),
+            "clear" => print!("\x1b[2J\x1b[H"),
+            "exit" | "shutdown" | "poweroff" => break,
+            name if programs::find(name).is_some() => run_program(&words),
+            other => println!("unknown command '{}' (try 'help')", other),
+        }
+    }
+    SHELL_DONE.store(true, Relaxed);
+    let others = scheduler::snapshot().iter().filter(|t| t.name != "shell" && t.name != "monitor").count();
+    if others > 0 {
+        println!("waiting for {} background task(s) to finish...", others);
+    }
+    println!("bye");
+}
+
+/// Live monitor task: one machine-readable snapshot per interval.
+fn monitor(interval_ms: u64) {
+    while !SHELL_DONE.load(Relaxed) {
+        emit_snapshot();
+        sys::sleep_ms(interval_ms);
+    }
+    emit_snapshot();
+}
+
+/// `#T ... SNAP key=value ... tasks=tid:name:state:prio:level:cpu:dispatches;...`
+fn emit_snapshot() {
+    let Some((policy, quantum, _, st, ready)) = scheduler::run_info() else { return };
+    let h = memory::stats();
+    let mut tasks = String::new();
+    for t in scheduler::snapshot() {
+        let sep = if tasks.is_empty() { "" } else { ";" };
+        let _ = write!(
+            tasks, "{}{}:{}:{}:{}:{}:{}:{}",
+            sep, t.tid, t.name, t.state.as_str(), t.prio, t.level, t.cpu_ticks, t.dispatches
+        );
+    }
+    console::trace_always(
+        "SNAP",
+        format_args!(
+            "ticks={} idle={} disp={} pre={} yld={} blk={} wake={} ready={} policy={} q={} tick_us={} \
+             heap_used={} heap_peak={} heap_cap={} free_blocks={} largest={} frag_bp={} allocs={} frees={} tasks={}",
+            st.ticks, st.idle_ticks, st.dispatches, st.preemptions, st.yields, st.blocks, st.wakeups, ready,
+            policy, quantum, timer::tick_us(), h.bytes_in_use, h.peak_bytes, h.capacity, h.free_blocks,
+            h.largest_free, h.fragmentation_bp(), h.allocs, h.frees, tasks
+        ),
+    );
+}
+
+/// Read one line with echo and backspace. Ctrl-C discards the line.
+fn read_line(line: &mut String) {
+    line.clear();
+    loop {
+        match console::read_byte() {
+            None => scheduler::sleep_ticks(1),
+            Some(b'\r' | b'\n') => {
+                println!();
+                return;
+            }
+            Some(BACKSPACE | DELETE) => {
+                if line.pop().is_some() {
+                    print!("\x08 \x08");
+                }
+            }
+            Some(CTRL_C) => {
+                println!("^C");
+                line.clear();
+                return;
+            }
+            Some(b) if (0x20..0x7f).contains(&b) => {
+                line.push(b as char);
+                print!("{}", b as char);
+            }
+            Some(_) => {} // ignore other control bytes / escape sequences
+        }
+    }
+}
+
+fn help() {
+    println!("commands:");
+    println!("  progs                  list programs you can run");
+    println!("  run [-p N] PROG ARGS [&]  start a program (priority N 0-7; '&' = background)");
+    println!("  PROG ARGS [&]          shortcut for 'run PROG ARGS'");
+    println!("  ps                     list tasks: state, priority, CPU ticks");
+    println!("  top                    live task view, refreshed every second (any key quits)");
+    println!("  sched                  scheduler policy and statistics");
+    println!("  mem                    kernel heap statistics");
+    println!("  kill PID               ask a task to stop (like Ctrl-C)");
+    println!("  uptime | echo ... | clear");
+    println!("  trace on|off           show the kernel's #T trace events");
+    println!("  log error|warn|info|debug   kernel log level");
+    println!("  exit                   power off");
+    println!("while a foreground program runs, Ctrl-C asks it to stop.");
+    println!("leave QEMU at any time: Ctrl-A then X.");
+}
+
+fn list_programs() {
+    for p in programs::PROGRAMS {
+        println!("  {:<26} {}", p.usage, p.about);
+    }
+}
+
+fn run_program(words: &[&str]) {
+    let mut words: Vec<&str> = words.to_vec();
+    let mut background = false;
+    if let Some(last) = words.last_mut() {
+        if *last == "&" {
+            words.pop();
+            background = true;
+        } else if let Some(stripped) = last.strip_suffix('&') {
+            *last = stripped;
+            background = true;
+        }
+    }
+    let mut prio = 4u8;
+    if words.first() == Some(&"-p") {
+        match words.get(1).and_then(|p| p.parse::<u8>().ok()) {
+            Some(p) if p <= 7 => prio = p,
+            _ => {
+                println!("run: -p needs a priority 0-7");
+                return;
+            }
+        }
+        words.drain(..2);
+    }
+    let Some((&name, args)) = words.split_first() else {
+        println!("usage: run [-p N] PROG [ARGS...] [&]");
+        return;
+    };
+    let Some(prog) = programs::find(name) else {
+        println!("run: no program '{}' (try 'progs')", name);
+        return;
+    };
+
+    let owned: Vec<String> = args.iter().map(|a| String::from(*a)).collect();
+    let (pname, main) = (prog.name, prog.main);
+    let spawned = scheduler::spawn(pname, SpawnOpts { prio, delay_ticks: 0 }, move || {
+        let args: Vec<&str> = owned.iter().map(String::as_str).collect();
+        let code = main(&args);
+        println!("[{} pid {} exited with code {}]", pname, sys::getpid(), code);
+    });
+    let tid = match spawned {
+        Ok(tid) => tid,
+        Err(e) => {
+            println!("run: could not start '{}': {:?} (limit {} tasks)", name, e, MAX_TASKS);
+            return;
+        }
+    };
+    if background {
+        println!("[started {} as pid {} in the background]", name, tid);
+        return;
+    }
+    while scheduler::is_alive(tid) {
+        if console::read_byte() == Some(CTRL_C) {
+            println!("^C");
+            scheduler::request_cancel(tid);
+        }
+        scheduler::sleep_ticks(1);
+    }
+}
+
+fn ps() {
+    println!("  PID NAME       STATE       PRIO LEVEL  CPU_TICKS  DISPATCHES");
+    for t in scheduler::snapshot() {
+        println!(
+            "  {:>3} {:<10} {:<11} {:>4} {:>5} {:>10} {:>11}",
+            t.tid, t.name, t.state.as_str(), t.prio, t.level, t.cpu_ticks, t.dispatches
+        );
+    }
+}
+
+fn sched() {
+    let Some((policy, quantum, preemptive, st, ready)) = scheduler::run_info() else { return };
+    let busy = st.ticks.saturating_sub(st.idle_ticks);
+    println!("  policy        {} (quantum {} ticks, {})", policy, quantum, if preemptive { "preemptive" } else { "cooperative" });
+    println!("  timer ticks   {} ({} idle, CPU busy {}%)", st.ticks, st.idle_ticks, busy * 100 / st.ticks.max(1));
+    println!("  dispatches    {}  preemptions {}  yields {}", st.dispatches, st.preemptions, st.yields);
+    println!("  blocks        {}  wakeups {}  ready queue {}", st.blocks, st.wakeups, ready);
+    println!("  restart with another policy: scripts/shell.sh policy=mlfq|prio|aging|rr quantum=N");
+}
+
+fn mem() {
+    let h = memory::stats();
+    let (ks, ke) = memory::kernel_image();
+    println!("  kernel image  {:#x}..{:#x} ({} KiB)", ks, ke, (ke - ks) / 1024);
+    println!("  heap          {} KiB first-fit free list", h.capacity / 1024);
+    println!("  in use        {} B (peak {} B)", h.bytes_in_use, h.peak_bytes);
+    println!("  allocs/frees  {} / {}  (failed {}, rejected frees {})", h.allocs, h.frees, h.failed, h.rejected_frees);
+    println!(
+        "  free blocks   {}  largest {} B  fragmentation {}.{:02}%",
+        h.free_blocks, h.largest_free, h.fragmentation_bp() / 100, h.fragmentation_bp() % 100
+    );
+}
+
+fn top() {
+    loop {
+        print!("\x1b[2J\x1b[H");
+        println!("Micro-OS top - up {} ms - press any key to quit", sys::uptime_ms());
+        sched();
+        println!();
+        ps();
+        if !sys::sleep_ms(1000) || console::read_byte().is_some() {
+            return;
+        }
+    }
+}
+
+fn kill(args: &[&str]) {
+    match args.first().and_then(|a| a.parse::<usize>().ok()) {
+        Some(tid) if tid == sys::getpid() => println!("kill: use 'exit' to stop the shell"),
+        Some(tid) if scheduler::request_cancel(tid) => println!("asked pid {} to stop", tid),
+        Some(tid) => println!("kill: no task {}", tid),
+        None => println!("usage: kill PID"),
+    }
+}
+
+fn set_trace(args: &[&str]) {
+    match args.first() {
+        Some(&"on") => {
+            console::set_trace(true);
+        }
+        Some(&"off") => {
+            console::set_trace(false);
+        }
+        _ => println!("usage: trace on|off (currently {})", if console::trace_enabled() { "on" } else { "off" }),
+    }
+}
+
+fn set_log(args: &[&str]) {
+    match args.first().and_then(|a| Level::parse(a)) {
+        Some(level) => console::set_level(level),
+        None => println!("usage: log error|warn|info|debug (currently {:?})", console::level()),
+    }
+}

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Micro-OS Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">µ</div>
+      <div>
+        <h1>Micro-OS</h1>
+        <p>RISC-V kernel in Rust · running in QEMU inside WSL</p>
+      </div>
+    </div>
+    <div class="controls">
+      <span id="status" class="pill">connecting…</span>
+      <label>Scheduler
+        <select id="policy">
+          <option value="rr">Round Robin</option>
+          <option value="prio">Priority</option>
+          <option value="aging">Priority + aging</option>
+          <option value="mlfq">MLFQ</option>
+        </select>
+      </label>
+      <label>Quantum
+        <input id="quantum" type="number" min="1" max="50" value="4">
+        <span class="unit">ticks</span>
+      </label>
+      <button id="reboot" class="btn primary">Reboot</button>
+      <button id="poweroff" class="btn ghost" title="Stop the virtual machine">Power off</button>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="live" role="tab">Live system</button>
+    <button class="tab-btn" data-tab="tests" role="tab">Tests &amp; results</button>
+  </nav>
+
+  <main id="tab-live" class="tab active">
+    <section class="card console">
+      <div class="card-head">
+        <h2>Console</h2>
+        <span class="hint">click and type · <kbd>Ctrl</kbd>+<kbd>C</kbd> stops the foreground program</span>
+      </div>
+      <div id="terminal"></div>
+      <div class="launcher">
+        <span class="launcher-label">Quick run</span>
+        <div id="programs" class="chips"></div>
+      </div>
+    </section>
+
+    <div class="side">
+      <div class="tiles">
+        <div class="tile"><span class="tile-label">CPU busy</span><span id="t-cpu" class="tile-value">–</span><span id="t-cpu-sub" class="tile-sub">&nbsp;</span></div>
+        <div class="tile"><span class="tile-label">Context switches</span><span id="t-sw" class="tile-value">–</span><span class="tile-sub">per second</span></div>
+        <div class="tile"><span class="tile-label">Tasks</span><span id="t-tasks" class="tile-value">–</span><span id="t-tasks-sub" class="tile-sub">&nbsp;</span></div>
+        <div class="tile"><span class="tile-label">Uptime</span><span id="t-up" class="tile-value">–</span><span id="t-ticks" class="tile-sub">&nbsp;</span></div>
+      </div>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>CPU share by task</h2>
+          <span class="hint">last 60 seconds</span>
+        </div>
+        <canvas id="cpu-chart" height="170"></canvas>
+        <div id="legend" class="legend"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Tasks</h2>
+          <span id="sched-info" class="hint"></span>
+        </div>
+        <table class="tasks">
+          <thead>
+            <tr><th>PID</th><th>Name</th><th>State</th><th class="num">Prio</th><th class="num">Level</th><th class="num">CPU ticks</th><th>Share</th></tr>
+          </thead>
+          <tbody id="task-rows"></tbody>
+        </table>
+      </section>
+
+      <div class="two">
+        <section class="card">
+          <div class="card-head"><h2>Kernel heap</h2><span id="heap-pct" class="hint"></span></div>
+          <div class="bar"><div id="heap-used" class="bar-fill"></div><div id="heap-peak" class="bar-peak"></div></div>
+          <dl id="heap-stats" class="stats"></dl>
+        </section>
+        <section class="card">
+          <div class="card-head"><h2>Scheduler</h2><span id="sched-policy" class="hint"></span></div>
+          <dl id="sched-stats" class="stats"></dl>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><h2>Activity</h2><span class="hint">tasks starting and finishing</span></div>
+        <ul id="activity" class="activity"><li class="muted">waiting for the kernel…</li></ul>
+      </section>
+    </div>
+  </main>
+
+  <main id="tab-tests" class="tab">
+    <section class="card">
+      <div class="card-head">
+        <h2>Test suite</h2>
+        <button id="run-tests" class="btn primary">Run all tests</button>
+      </div>
+      <p class="hint">Host unit tests, the 59 in-kernel checks (TC1–TC6 and mechanism demos), cross-boot repeatability, the shell smoke test and the plots. Takes about a minute and runs in a separate QEMU.</p>
+      <pre id="test-log" class="log">No run yet in this session.</pre>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Checks</h2><span id="check-summary" class="hint"></span></div>
+      <div id="checks" class="checks"></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Plots</h2><span class="hint">from analysis/analyze.py</span></div>
+      <div id="plots" class="plots"></div>
+    </section>
+  </main>
+
+  <div id="lightbox" class="lightbox" hidden><img alt=""></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
