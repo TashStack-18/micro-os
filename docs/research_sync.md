@@ -13,7 +13,7 @@ Reproduce:
 
 ```bash
 scripts/research.sh                 # 3 seeds, 5000 ms window: 132 kernel runs, ~15 min
-scripts/research.sh r3_seeds=10     # tighter confidence intervals (~50 min)
+scripts/research.sh r3_seeds=10     # the results below: 440 runs, ~50 min
 ```
 
 Measured tables: [`results/research_sync.md`](../results/research_sync.md) ·
@@ -50,25 +50,26 @@ figures: `results/r3_fig1..4_*.png`, `results/r3_kernel_vs_simulator.png`.
 | Repetitions | 30 seeds | 3 seeds by default (time budget); `r3_seeds=` raises it |
 | Arrival window | 5000 ms | 5000 ms |
 
-## 3. Results (3 seeds, 5000 ms window)
+## 3. Results (10 seeds, 5000 ms window: 440 kernel runs)
 
 All three hypotheses are supported on the kernel, as in the simulator.
 
 | | Simulator | Kernel |
 |---|---|---|
 | **H1** SJF/SRTF highest throughput, Jain < 0.5; RR ≈ 1 (ρ = 1.1) | supported | **supported** |
-| — bimodal throughput SJF / SRTF / RR q=2 | 6.94 / 6.96 / 6.29 | 6.95 / 6.96 / 6.50 |
-| — bimodal Jain SJF / SRTF / RR q=2 | 0.28 / 0.23 / 0.99 | 0.32 / 0.45 / 0.99 |
-| — uniform Jain SJF / SRTF / RR q=2 | 0.12 / 0.13 / 0.96 | 0.27 / 0.25 / 0.95 |
-| — correlation throughput vs Jain, uniform / bimodal | −0.94 / −0.51 | −0.90 / −0.51 |
-| **H2** at ρ = 0.7 all policies complete the same work | supported (4.49–4.53) | **supported** (bimodal: 4.47 for every policy; uniform: 4.17–4.18) |
-| **H3** RR: small q loses throughput, large q loses fairness | supported, peak at q = 8 | **supported, peak at q = 8** (6.66) |
-| — throughput at q = 1 / 8 / 128 | 6.03 / 6.48 / 6.29 | 6.11 / 6.66 / 6.54 |
-| — context-switch share at q = 1 / 2 / 8 | 16.5 / 9.2 / 3.0 % | 19.4 / 9.9 / 2.9 % |
-| — Jain at q = 1 / 8 / 128 | 1.00 / 0.93 / 0.12 | 1.00 / 0.96 / 0.26 |
-| Slowdown-based Jain, SRTF vs RR q=2 (bimodal) | 0.89 vs 0.31 | 0.89 vs 0.29 |
-| HRRN limits the worst case among shortest-first policies | yes | yes (bimodal: max wait 1,035 ms vs 3,244 ms for SRTF; variance 42,847 vs 159,468 ms²) |
-| HRRN has the lowest waiting variance of **all** policies | yes | **no**: FCFS was lower on the kernel (35,067 ms²) |
+| — bimodal throughput SJF / SRTF / RR q=2 | 6.94 / 6.96 / 6.29 | 7.02 ± 0.21 / 7.04 ± 0.21 / 6.48 ± 0.28 |
+| — bimodal Jain SJF / SRTF / RR q=2 | 0.28 / 0.23 / 0.99 | 0.39 ± 0.13 / 0.46 ± 0.16 / 0.99 |
+| — uniform throughput SJF / SRTF / RR q=2 | 6.42 / 6.41 / 4.95 | 6.19 / 6.19 / 4.74 |
+| — uniform Jain SJF / SRTF / RR q=2 | 0.12 / 0.13 / 0.96 | 0.19 ± 0.09 / 0.18 ± 0.07 / 0.96 |
+| — correlation throughput vs Jain, uniform / bimodal | −0.94 / −0.51 | −0.91 / −0.31 |
+| **H2** at ρ = 0.7 all policies complete the same work | supported (4.49–4.53) | **supported** (bimodal 4.49–4.52; uniform 4.19–4.23) |
+| **H3** RR: small q loses throughput, large q loses fairness | supported, peak at q = 8 | **supported, peak at q = 8** |
+| — throughput at q = 1 / 8 / 128 | 6.03 / 6.48 / 6.29 | 6.10 / 6.65 / 6.44 |
+| — context-switch share at q = 1 / 2 / 8 | 16.5 / 9.2 / 3.0 % | 19.6 / 9.9 / 3.0 % |
+| — Jain at q = 1 / 8 / 128 | 1.00 / 0.93 / 0.12 | 1.00 / 0.96 / 0.19 |
+| Slowdown-based Jain, SRTF vs RR q=2 (bimodal) | 0.89 vs 0.31 | 0.89 vs 0.41 |
+| HRRN limits the worst case among shortest-first policies | yes | yes (bimodal: max wait 1,039 ms vs 3,337 ms for SRTF; variance 45,014 vs 158,358 ms²) |
+| HRRN has the lowest waiting variance of **all** policies | yes | **no**: FCFS was lower on the kernel (37,960 ms²) |
 
 So the paper's central finding, **maximizing throughput does not produce fair
 CPU allocation**, holds on a real scheduler, and so does the "two
@@ -76,36 +77,47 @@ definitions of fairness" result.
 
 ## 4. Where the kernel differs, and why
 
-1. **Fairness at low load is not measurable from these runs.** At ρ = 0.7
-   only 0–3 of the ~20 intervals per run had any task present for the whole
-   250 ms (SJF: one interval in all three runs). The kernel averages only
-   over intervals where Jain's index is defined. The simulator's ~0.9 values
-   at ρ = 0.7 likely come from counting near-empty intervals as fair (the
-   R3 report: "two processes rarely compete for a full 250 ms interval").
-   Table 3's ρ = 0.7 and 0.9 fairness columns should therefore not be
-   compared directly. This is the R3 report's own lesson that the
-   conclusion depends on how fairness is measured.
+1. **Fairness at low load rests on very few intervals.** Jain's index is
+   only defined for 250 ms intervals in which some task was present the
+   whole time. At ρ = 0.7 that is rare: on the bimodal workload SJF averaged
+   0.6 such intervals per run (6 of 10 runs had none), FCFS 0.4; on the
+   uniform workload FCFS and HRRN had none in any run. The kernel averages
+   only over defined intervals. With 10 seeds the ρ = 0.7 values come out
+   close to the simulator for SJF, SRTF and RR (0.88 / 0.91 / 1.00 vs
+   0.91 / 0.87 / 1.00) but not for FCFS (0.57 vs 0.89), and all of them are
+   based on a handful of intervals. The simulator's high low-load values
+   likely also reflect how near-empty intervals were treated (the R3 report:
+   "two processes rarely compete for a full 250 ms interval"). This is the
+   R3 report's own lesson that the conclusion depends on how fairness is
+   measured. Compare the ρ = 1.1 column (4–23 intervals per run; fewest for SJF, whose starved jobs often receive nothing in an interval) with
+   confidence; treat ρ = 0.7 and 0.9 as indicative only.
 2. **Some intervals are undefined under SJF/SRTF.** When every task present
    for the whole interval was starved (all CPU went to jobs that arrived
    during it), all shares are 0 and Jain's index is 0/0. The kernel skips
    such intervals. They occur mostly under SJF/SRTF, so the kernel's Jain
-   for those policies (0.25–0.45) is, if anything, an *over*-estimate of
-   their fairness; they are still far below RR.
-3. **Wide confidence intervals.** With 3 seeds, Jain's CIs are large (for
-   example SRTF bimodal 0.45 ± 0.35), so H1's "Jain < 0.5" is met on the
-   mean but not with confidence for every policy. Run `r3_seeds=10` or more
-   before quoting fairness values as precise.
-4. **Utilisation is lower (≈ 90–93 % vs ≈ 95–97 % under overload)** and throughput
-   at large quanta is slightly higher (6.54 vs 6.29 at q = 128, inside the
-   ±0.4 CI). The kernel has real overheads beyond the modelled 0.2 ms
-   (timer interrupts every millisecond, the dispatcher, the in-kernel
-   measurement) that the simulator does not.
+   for those policies is, if anything, an *over*-estimate of their fairness.
+3. **Fairness under overload is higher than the simulator's for the
+   shortest-first policies on the bimodal workload** (SRTF 0.46 ± 0.16 vs
+   0.23), so H1's "Jain < 0.5" holds on the mean but its confidence interval
+   reaches above 0.5 for SRTF. On the uniform workload the gap is clear
+   (0.18–0.19 vs 0.96 for RR). Item 2 is one likely cause. As a result the
+   bimodal throughput–fairness correlation is weaker than the simulator's
+   (r = −0.31 vs −0.51). With 3 seeds it happened to come out at −0.51, a
+   reminder that a single matching number is not evidence on its own.
+4. **Absolute throughput differs by a few percent.** On the uniform workload
+   every policy completes about 3–4 % fewer jobs than in the simulator, and
+   utilisation is lower (≈ 92 % vs ≈ 97 %). The kernel has real overheads
+   beyond the modelled 0.2 ms (a timer interrupt every millisecond, the
+   dispatcher, the in-kernel measurement) that the simulator does not. On
+   the bimodal workload the kernel's values are slightly *higher* but
+   within their 95 % confidence intervals of the simulator's. The ranking of
+   the policies is the same in both.
 5. **The 0.5 ms quantum cannot be run**: the kernel's scheduling resolution
    is its 1 ms timer tick.
 
 ## 5. Engineering lessons from the port (debugging log material)
 
-Getting the kernel to reproduce the simulator exposed three measurement
+Getting the kernel to reproduce the simulator exposed four measurement
 bugs, each a real systems lesson:
 
 * **Tick-sampled CPU accounting hides switch costs.** At first the modelled

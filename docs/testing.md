@@ -32,7 +32,7 @@ Run everything: `scripts/test_all.sh` (results go to `traces/` and `results/`).
 | Memory | `mem` | every allocator reclaims everything; free list beats bump on mixed sizes |
 | Specialization | `sched_cmp`, `quantum_sweep` | PRIO starves BATCH, aging fixes it, MLFQ latency ≤ RR; switch count falls as q grows |
 | R3 policies (quick) | `r3_quick` | every generated job completes; FCFS/SJF/HRRN are never preempted; SRTF preempts on a shorter arrival |
-| R3 research (full) | `test=research` / `scripts/research.sh` | 132 runs; H1–H3 scored (all supported); see `docs/research_sync.md` |
+| R3 research (full) | `test=research` / `scripts/research.sh` | 440 runs (10 seeds; default 3 seeds = 132 runs); H1–H3 all supported; see `docs/research_sync.md` |
 | Shell | `scripts/shell_smoke.sh` | scripted session: programs, background tasks, ps/sched/mem, clean exit |
 
 ## Linux comparison (§20)
