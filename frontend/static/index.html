@@ -10,26 +10,40 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="nebula" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-cpu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9d5ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="g-mem" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d0fe"/><stop offset="1" stop-color="#c026d3"/></linearGradient>
+    <linearGradient id="g-tasks" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bae6fd"/><stop offset="1" stop-color="#6366f1"/></linearGradient>
+  </defs>
+</svg>
 <div class="app">
 
   <!-- ===================== header ===================== -->
   <header class="hero">
-    <svg class="scenery" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <svg class="scenery" viewBox="0 0 1440 140" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
       <defs>
-        <radialGradient id="moon" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffd9f2"/><stop offset="70%" stop-color="#f0a8d8"/><stop offset="100%" stop-color="#f0a8d800"/>
+        <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffd6f0" stop-opacity=".9"/><stop offset="35%" stop-color="#e879c9" stop-opacity=".35"/><stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
         </radialGradient>
+        <linearGradient id="moonface" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe4f5"/><stop offset="1" stop-color="#f3b1dc"/></linearGradient>
+        <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a855f7" stop-opacity="0"/><stop offset="1" stop-color="#a855f7" stop-opacity=".35"/></linearGradient>
+        <linearGradient id="far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d4fb8"/><stop offset="1" stop-color="#3b2a75"/></linearGradient>
+        <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46327f"/><stop offset="1" stop-color="#261a52"/></linearGradient>
       </defs>
-      <circle cx="1225" cy="62" r="70" fill="url(#moon)" opacity=".55"/>
-      <circle cx="1225" cy="62" r="38" fill="#f6c3e6"/>
-      <path d="M760 120 L900 52 L980 88 L1080 34 L1180 84 L1260 58 L1360 96 L1440 70 L1440 120 Z" fill="#3a2a6b" opacity=".75"/>
-      <path d="M680 120 L820 80 L930 104 L1040 70 L1150 102 L1250 86 L1380 110 L1440 98 L1440 120 Z" fill="#251a4a"/>
-      <g fill="#140e2c">
-        <path d="M1300 120 l14-56 l14 56z"/><path d="M1328 120 l18-72 l18 72z"/><path d="M1360 120 l12-44 l12 44z"/>
-        <path d="M1384 120 l20-80 l20 80z"/><path d="M1412 120 l14-52 l14 52z"/>
+      <rect x="0" y="70" width="1440" height="70" fill="url(#horizon)"/>
+      <circle cx="1230" cy="58" r="120" fill="url(#halo)"/>
+      <circle cx="1230" cy="58" r="44" fill="url(#moonface)"/>
+      <path d="M560 140 L700 92 L780 112 L880 58 L960 96 L1050 44 L1130 90 L1210 70 L1300 104 L1380 76 L1440 94 L1440 140 Z" fill="url(#far)" opacity=".8"/>
+      <path d="M520 140 L640 116 L760 128 L860 96 L980 124 L1080 98 L1190 122 L1290 108 L1440 126 L1440 140 Z" fill="url(#mid)"/>
+      <g fill="#130c2b">
+        <path d="M1250 140 l11-40 l11 40z"/><path d="M1272 140 l15-58 l15 58z"/><path d="M1300 140 l10-34 l10 34z"/>
+        <path d="M1318 140 l18-74 l18 74z"/><path d="M1348 140 l13-50 l13 50z"/><path d="M1370 140 l20-86 l20 86z"/>
+        <path d="M1402 140 l14-56 l14 56z"/><path d="M1424 140 l12-44 l12 44z"/>
       </g>
     </svg>
-    <div class="stars" aria-hidden="true"></div>
     <div class="brand">
       <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
         <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d0fe"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
@@ -195,9 +209,9 @@
     <div class="panel">
       <div class="panel-head"><h2><svg class="icon" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>System Monitor</h2></div>
       <div class="rings">
-        <div class="ring" id="ring-cpu"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>CPU</span></div>
-        <div class="ring" id="ring-mem"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>Heap</span></div>
-        <div class="ring" id="ring-tasks"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>Tasks</span></div>
+        <div class="ring" id="ring-cpu"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/><circle class="tip" cx="72" cy="40" r="4"/></svg><b>–</b><span>CPU</span></div>
+        <div class="ring" id="ring-mem"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/><circle class="tip" cx="72" cy="40" r="4"/></svg><b>–</b><span>Heap</span></div>
+        <div class="ring" id="ring-tasks"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/><circle class="tip" cx="72" cy="40" r="4"/></svg><b>–</b><span>Tasks</span></div>
       </div>
     </div>
 

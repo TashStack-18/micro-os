@@ -26,15 +26,17 @@ let lastTids = null;
 let running = false;
 
 // ================================================================ terminal
+const MONO = '"JetBrains Mono", Consolas, monospace';
 const term = new Terminal({
-  fontFamily: '"JetBrains Mono", Consolas, monospace',
+  fontFamily: MONO,
   fontSize: 13.5,
   lineHeight: 1.25,
   cursorBlink: true,
   cursorStyle: "bar",
   scrollback: 5000,
+  allowTransparency: true, // the glass window behind the text shows through
   theme: {
-    background: "#110c25", foreground: "#e9e4ff", cursor: "#c4b5fd", cursorAccent: "#110c25",
+    background: "rgba(0,0,0,0)", foreground: "#e9e4ff", cursor: "#c4b5fd", cursorAccent: "#110c25",
     selectionBackground: "#4c3a8a",
     black: "#2a2150", brightBlack: "#6f6795", red: "#f87171", green: "#4ade80", yellow: "#fbbf24",
     blue: "#93c5fd", magenta: "#c084fc", cyan: "#7dd3fc", white: "#e9e4ff",
@@ -45,6 +47,14 @@ term.loadAddon(fit);
 term.open($("#terminal"));
 const refit = () => { try { fit.fit(); } catch (_) { /* hidden */ } };
 refit();
+// xterm measures the character cell when it opens. If the web font arrives
+// later, glyphs no longer match the cell and columns drift; re-measure once
+// the font is really loaded.
+document.fonts.load(`13.5px "JetBrains Mono"`).then(() => {
+  term.options.fontFamily = "monospace";
+  term.options.fontFamily = MONO;
+  refit();
+});
 window.addEventListener("resize", () => { refit(); drawCharts(); });
 
 let pending = "";
@@ -202,7 +212,9 @@ function onSnapshot(s) {
 
 function ring(sel, frac, label) {
   const el = $(sel);
-  el.querySelector(".val").style.strokeDashoffset = RING_LEN * (1 - Math.min(1, frac));
+  const f = Math.min(1, Math.max(0, frac));
+  el.querySelector(".val").style.strokeDashoffset = RING_LEN * (1 - f);
+  el.querySelector(".tip").style.transform = `rotate(${f * 360}deg)`;
   el.querySelector("b").textContent = label;
 }
 const cap = (st) => st.charAt(0) + st.slice(1).toLowerCase();
@@ -429,6 +441,49 @@ function loadResults() {
   });
 }
 $("#lightbox").onclick = () => ($("#lightbox").hidden = true);
+
+// ================================================================ starfield
+(function starfield() {
+  const canvas = $("#sky");
+  const ctx = canvas.getContext("2d");
+  const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let stars = [];
+  function seed() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.round((innerWidth * innerHeight) / 5200);
+    stars = Array.from({ length: n }, () => ({
+      x: Math.random() * innerWidth,
+      y: Math.random() * innerHeight,
+      r: Math.random() < 0.08 ? 1.5 + Math.random() : 0.4 + Math.random() * 0.8,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 1.2,
+      hue: Math.random() < 0.3 ? "233,213,255" : "255,255,255",
+    }));
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const s of stars) {
+      const a = still ? 0.7 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(s.phase + (t / 1000) * s.speed));
+      ctx.fillStyle = `rgba(${s.hue},${a})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (s.r > 1.4) {
+        ctx.fillStyle = `rgba(216,180,254,${a * 0.25})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    if (!still) requestAnimationFrame(draw);
+  }
+  seed();
+  addEventListener("resize", seed);
+  requestAnimationFrame(draw);
+})();
 
 connect();
 term.focus();

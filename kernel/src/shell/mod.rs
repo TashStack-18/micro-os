@@ -27,6 +27,8 @@ const DELETE: u8 = 0x7f;
 
 /// Set when the shell exits, so the monitor task stops too.
 static SHELL_DONE: AtomicBool = AtomicBool::new(false);
+/// Running under the web panel (`monitor=1`): start the console on a clean screen.
+static PANEL_MODE: AtomicBool = AtomicBool::new(false);
 
 pub fn run(args: &BootArgs) -> u32 {
     let policy = args.get("policy").and_then(PolicyKind::parse).unwrap_or(PolicyKind::RoundRobin);
@@ -36,6 +38,7 @@ pub fn run(args: &BootArgs) -> u32 {
     SHELL_DONE.store(false, Relaxed);
     scheduler::begin(Config { label: "shell".into(), policy, quantum, preemptive: true });
     scheduler::spawn("shell", SpawnOpts { prio: 0, delay_ticks: 0 }, shell_main).expect("could not start the shell");
+    PANEL_MODE.store(args.flag("monitor", false), Relaxed);
     if args.flag("monitor", false) {
         let interval_ms = args.get_u64("monitor_ms").unwrap_or(250).max(20);
         scheduler::spawn("monitor", SpawnOpts { prio: 0, delay_ticks: 0 }, move || monitor(interval_ms))
@@ -52,13 +55,26 @@ const GREEN: &str = "\x1b[38;5;114m";
 const DIM: &str = "\x1b[90m";
 const BOLD: &str = "\x1b[1m";
 const RESET: &str = "\x1b[0m";
+const PINK: &str = "\x1b[38;5;219m";
+const LINE: &str = "\x1b[38;5;97m";
+
+/// A horizontal rule between sections of output.
+fn rule() {
+    println!("{LINE}{}{RESET}", "\u{2500}".repeat(76));
+}
 
 /// Checklist of what the kernel actually brought up, read from live state.
 fn banner() {
     let ok = |text: core::fmt::Arguments| println!("{GREEN}[\u{2713}]{RESET}    {}", text);
     let h = memory::stats();
-    println!();
+    if PANEL_MODE.load(Relaxed) {
+        // Firmware and kernel boot logs scroll into the terminal history.
+        print!("\x1b[2J\x1b[H");
+    } else {
+        println!();
+    }
     println!("{PURPLE}[BOOT]{RESET} Micro-OS v{} (riscv64, S-mode, {})", env!("CARGO_PKG_VERSION"), drivers::sbi::impl_name());
+    println!("{PURPLE}[BOOT]{RESET} Kernel subsystems:");
     ok(format_args!("Trap vector installed (timer interrupts on)"));
     ok(format_args!("Kernel heap ready ({} MiB, first-fit free list)", h.capacity >> 20));
     ok(format_args!("Timer running ({} us per tick)", timer::tick_us()));
@@ -70,8 +86,8 @@ fn banner() {
     for t in scheduler::snapshot() {
         println!("         {DIM}->{RESET} {} (pid: {})", t.name, t.tid);
     }
-    println!("{GREEN}[\u{2713}]{RESET}    {BOLD}Micro-OS shell is ready!{RESET} {DIM}type 'help' for commands, 'progs' for programs{RESET}");
-    println!();
+    println!("{GREEN}[\u{2713}]{RESET}    {BOLD}Micro-OS is ready!{RESET} {PINK}\u{2726}{RESET}  {DIM}type 'help' for commands, 'progs' for programs{RESET}");
+    rule();
 }
 
 fn prompt() {
@@ -198,12 +214,14 @@ fn help() {
         ("clear", "clear the screen"),
     ];
     println!("Available commands:");
+    rule();
     for ((lc, ld), (rc, rd)) in LEFT.iter().zip(RIGHT.iter()) {
         println!(
             "  {PURPLE}{:<20}{RESET}{DIM}-{RESET} {:<20} {DIM}|{RESET}  {PURPLE}{:<13}{RESET}{DIM}-{RESET} {}",
             lc, ld, rc, rd
         );
     }
+    rule();
     println!("{DIM}N = priority 0 (high) to 7 (low); '&' runs in the background; Ctrl-C stops the foreground program.{RESET}");
 }
 
