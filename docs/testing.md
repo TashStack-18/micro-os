@@ -38,8 +38,14 @@ From `results/summary.md` (deterministic mode):
 * Two boots: logs byte-identical.
 * Race: unsynchronized lost **2568 of 4000** increments; every lock gave 4000.
 * Lock cost: spin-yield 55 ms, pure spin 126 ms (1.76 M wasted spins),
-  mutex 261 ms (3907 context switches from the FIFO hand-off convoy).
+  mutex 259 ms (about 3900 contended hand-offs, each one a context switch:
+  the FIFO hand-off convoy).
 * Allocators (mixed sizes): bump 1608 successes / 828 failures; first-fit
   2097 / 3; best-fit 2099 / 2, but best-fit is ~37% slower per operation.
-* Policies (same workload): BATCH response time is 26.3 ms under PRIO and
-  9.6 ms with aging. MLFQ interactive latency is at or below RR.
+* Policies (same workload): the low-priority BATCH task first runs after
+  **140.3 ms** under PRIO but **40.2 ms** with aging (3.5x sooner).
+  Interactive scheduling latency: RR 10.3 ms, MLFQ 7.2 ms, PRIO 0.05 ms.
+
+Exact figures come from `results/summary.md` and `results/cmp.csv`; they
+are deterministic for a given kernel binary, so regenerate them with
+`scripts/test_all.sh` after changing the kernel and update this list.

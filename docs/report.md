@@ -9,8 +9,8 @@ Micro-OS: a timer-driven, multi-policy educational kernel for RISC-V in Rust.
 
 ## 2. Abstract
 **TODO** (≈150 words): what was built, the specialization (Track A), headline
-results (59/59 checks; aging cuts low-priority response from 26.3 ms to
-9.6 ms; spin-yield 2.3x faster than pure spinning on one CPU), and the main
+results (59/59 checks; aging cuts the low-priority task's response from
+140.3 ms to 40.2 ms; spin-yield 2.3x faster than pure spinning on one CPU), and the main
 limitation (no user mode).
 
 ## 3. Problem statement
@@ -68,8 +68,8 @@ Copy the tables from `results/summary.md` (regenerate with `scripts/test_all.sh`
   from your CA-4 work.
 * Spinning on a uniprocessor: pure spin wasted 1.76 M iterations because a
   waiter cannot make progress while the preempted holder is off the CPU.
-* Mutex convoy: FIFO hand-off made every increment a context switch (3907
-  dispatches, 261 ms). Why barging would be faster here, and what it costs in fairness.
+* Mutex convoy: FIFO hand-off made almost every increment a context switch
+  (about 3900 contended hand-offs, 259 ms). Why barging would be faster here, and what it costs in fairness.
 * Allocator trade-off: best-fit is marginally more successful but ~37% slower.
 
 ## 16. Limitations

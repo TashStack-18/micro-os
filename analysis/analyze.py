@@ -86,6 +86,8 @@ def run_summary(run, rows, tick_us):
         "dispatches": end.get("dispatches", 0), "preemptions": end.get("preemptions", 0),
         "avg_turnaround_us": round(mean("turnaround_us")), "avg_response_us": round(mean("response_us")),
         "avg_wait_us": round(mean("wait_us")), "jain_fairness": round(jain(rates), 3) if rates else "",
+        # Throughput: tasks completed per second of (virtual) run time.
+        "throughput_tps": round(len(rows) / (end["elapsed_us"] / 1e6), 1) if end.get("elapsed_us") else "",
         "deadlock": end.get("deadlock", 0),
     }
 
@@ -226,12 +228,12 @@ def markdown(outdir, summaries, by_type, made):
     if failed:
         lines += ["Failed: " + ", ".join(failed), ""]
     lines += ["## Scheduling runs", "",
-              "| run | policy | q | tasks | dispatches | avg turnaround (ms) | avg response (ms) | avg wait (ms) | Jain fairness |",
-              "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
+              "| run | policy | q | tasks | dispatches | avg turnaround (ms) | avg response (ms) | avg wait (ms) | throughput (tasks/s) | Jain fairness |",
+              "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for s in summaries:
         lines.append(f"| {s['run']} | {s['policy']} | {s['q']} | {s['tasks']} | {s['dispatches']} | "
                      f"{s['avg_turnaround_us'] / 1000:.1f} | {s['avg_response_us'] / 1000:.1f} | "
-                     f"{s['avg_wait_us'] / 1000:.1f} | {s['jain_fairness']} |")
+                     f"{s['avg_wait_us'] / 1000:.1f} | {s['throughput_tps']} | {s['jain_fairness']} |")
     if by_type.get("LOCK"):
         lines += ["", "## Synchronization (4 tasks x 1000 increments)", "",
                   "| variant | result | lost | time (ms) | contended | spins | mutex wait (ms) |",

@@ -147,6 +147,12 @@ impl FreeListAllocator {
     }
 
     /// Validate `ptr` and put its block back on the free list.
+    ///
+    /// # Safety
+    /// The header read at `ptr - HEADER` is only trusted after the range and
+    /// alignment checks prove it lies inside our region; the magic check then
+    /// rejects anything that is not a live block. The caller must not use
+    /// `ptr` again if the free succeeds.
     unsafe fn free_block(&mut self, ptr: *mut u8) -> Result<usize, FreeError> {
         let p = ptr as usize;
         if p < self.start + HEADER || p >= self.end {
@@ -175,11 +181,11 @@ impl FreeListAllocator {
         while !cur.is_null() {
             // SAFETY: list nodes are written only by `init`/`insert_free`
             // inside the region this allocator owns.
-            let size = unsafe { (*cur).size };
+            let (size, next) = unsafe { ((*cur).size, (*cur).next) };
             n += 1;
             largest = largest.max(size);
             total += size;
-            cur = unsafe { (*cur).next };
+            cur = next;
         }
         (n, largest, total)
     }

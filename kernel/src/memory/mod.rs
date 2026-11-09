@@ -53,6 +53,10 @@ pub unsafe fn checked_free(ptr: *mut u8, layout: Layout) -> Result<(), FreeError
     HEAP.inner.lock().dealloc(ptr, layout)
 }
 
+// SAFETY: blocks returned by `alloc` are inside the heap region, aligned as
+// requested (FreeListAllocator::place), and never handed out twice while
+// live; the IrqSpinLock serialises every call, including ones made from the
+// timer interrupt path. `dealloc` validates the pointer before reusing it.
 unsafe impl GlobalAlloc for KernelHeap {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let p = self.inner.lock().alloc(layout);
