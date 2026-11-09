@@ -227,6 +227,15 @@ def programs():
     return [{"name": n, "usage": u, "about": a} for n, u, a in PROGRAM.findall(src)]
 
 
+def info():
+    cargo = (ROOT / "kernel/Cargo.toml").read_text()
+    sched = (ROOT / "kernel/src/scheduler/mod.rs").read_text()
+    version = re.search(r'^version = "([^"]+)"', cargo, re.M)
+    max_tasks = re.search(r"pub const MAX_TASKS: usize = (\d+);", sched)
+    return {"version": version[1] if version else "?", "arch": "riscv64",
+            "max_tasks": int(max_tasks[1]) if max_tasks else 64}
+
+
 def results():
     checks, summary = [], None
     log = ROOT / "traces/all.log"
@@ -248,7 +257,8 @@ def results():
 class Handler(BaseHTTPRequestHandler):
     hub = machine = tests = None
     CONTENT_TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
-                     ".css": "text/css; charset=utf-8", ".png": "image/png", ".md": "text/plain; charset=utf-8"}
+                     ".css": "text/css; charset=utf-8", ".png": "image/png", ".svg": "image/svg+xml",
+                     ".md": "text/plain; charset=utf-8"}
 
     def log_message(self, fmt, *args):
         pass  # keep the terminal quiet
@@ -284,6 +294,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.stream_events()
         if path == "/api/programs":
             return self.send_json(programs())
+        if path == "/api/info":
+            return self.send_json(info())
         if path == "/api/results":
             return self.send_json(results())
         for prefix, base in (("/static/", STATIC), ("/results/", ROOT / "results")):

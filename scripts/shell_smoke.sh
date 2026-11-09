@@ -14,7 +14,7 @@ mkdir -p "$ROOT/traces"
 commands=(
     "help" "progs" "hello world 42" "fib 20" "counter 3 200"
     "spin 2 &" "spin 2 yield &" "ps" "primes 30000" "sched" "mem"
-    "memtest 512" "run nosuch" "kill 99"
+    "memtest 512" "sysinfo" "run nosuch" "kill 99"
 )
 
 type_commands() {
@@ -34,5 +34,5 @@ type_commands | timeout 60 qemu-system-riscv64 \
     -machine virt -cpu rv64 -smp 1 -m 128M -nographic -bios default -no-reboot \
     -kernel "$ELF" -append "test=shell" 2>&1 | tr -d '\r' > "$LOG" || true
 
-sed -n '/Micro-OS shell/,$p' "$LOG"
+sed -n '/BOOT/,$p' "$LOG"
 grep -q '^bye$' "$LOG" && echo "[shell_smoke] OK" || { echo "[shell_smoke] shell did not exit cleanly"; exit 1; }

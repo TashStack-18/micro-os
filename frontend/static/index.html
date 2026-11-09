@@ -5,128 +5,236 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Micro-OS Control Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header class="topbar">
+<div class="app">
+
+  <!-- ===================== header ===================== -->
+  <header class="hero">
+    <svg class="scenery" viewBox="0 0 1440 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffd9f2"/><stop offset="70%" stop-color="#f0a8d8"/><stop offset="100%" stop-color="#f0a8d800"/>
+        </radialGradient>
+      </defs>
+      <circle cx="1225" cy="62" r="70" fill="url(#moon)" opacity=".55"/>
+      <circle cx="1225" cy="62" r="38" fill="#f6c3e6"/>
+      <path d="M760 120 L900 52 L980 88 L1080 34 L1180 84 L1260 58 L1360 96 L1440 70 L1440 120 Z" fill="#3a2a6b" opacity=".75"/>
+      <path d="M680 120 L820 80 L930 104 L1040 70 L1150 102 L1250 86 L1380 110 L1440 98 L1440 120 Z" fill="#251a4a"/>
+      <g fill="#140e2c">
+        <path d="M1300 120 l14-56 l14 56z"/><path d="M1328 120 l18-72 l18 72z"/><path d="M1360 120 l12-44 l12 44z"/>
+        <path d="M1384 120 l20-80 l20 80z"/><path d="M1412 120 l14-52 l14 52z"/>
+      </g>
+    </svg>
+    <div class="stars" aria-hidden="true"></div>
     <div class="brand">
-      <div class="logo">µ</div>
+      <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f5d0fe"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
+        <path d="M32 4 C34 22 42 30 60 32 C42 34 34 42 32 60 C30 42 22 34 4 32 C22 30 30 22 32 4Z" fill="none" stroke="url(#lg)" stroke-width="3"/>
+      </svg>
       <div>
         <h1>Micro-OS</h1>
-        <p>RISC-V kernel in Rust · running in QEMU inside WSL</p>
+        <p>An Educational Rust Kernel</p>
       </div>
     </div>
-    <div class="controls">
-      <span id="status" class="pill">connecting…</span>
-      <label>Scheduler
-        <select id="policy">
-          <option value="rr">Round Robin</option>
-          <option value="prio">Priority</option>
-          <option value="aging">Priority + aging</option>
-          <option value="mlfq">MLFQ</option>
-        </select>
-      </label>
-      <label>Quantum
-        <input id="quantum" type="number" min="1" max="50" value="4">
-        <span class="unit">ticks</span>
-      </label>
-      <button id="reboot" class="btn primary">Reboot</button>
-      <button id="poweroff" class="btn ghost" title="Stop the virtual machine">Power off</button>
+    <div class="meta">
+      <span id="meta-version">v0.1.0</span><i></i><span>Rust kernel</span><i></i><span id="meta-arch">riscv64</span>
     </div>
   </header>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab-btn active" data-tab="live" role="tab">Live system</button>
-    <button class="tab-btn" data-tab="tests" role="tab">Tests &amp; results</button>
+  <!-- ===================== sidebar ===================== -->
+  <nav class="sidebar">
+    <button class="nav active" data-view="terminal"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg>Terminal</button>
+    <button class="nav" data-view="processes"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>Processes</button>
+    <button class="nav" data-view="memory"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>Memory</button>
+    <button class="nav" data-view="scheduler"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Scheduler</button>
+    <button class="nav" data-view="programs"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>Programs</button>
+    <button class="nav" data-view="tests"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3"/></svg>Tests</button>
+    <button class="nav" data-view="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>About</button>
+    <div class="sidebar-art" aria-hidden="true">
+      <svg viewBox="0 0 180 150"><ellipse cx="120" cy="120" rx="110" ry="46" fill="none" stroke="#a78bfa55" stroke-width="1.5" transform="rotate(-22 120 120)"/><circle cx="150" cy="150" r="70" fill="#7c3aed33"/><path d="M40 70 c1.5 9 5 12.5 14 14 c-9 1.5-12.5 5-14 14 c-1.5-9-5-12.5-14-14 c9-1.5 12.5-5 14-14z" fill="#f0abfc"/></svg>
+    </div>
   </nav>
 
-  <main id="tab-live" class="tab active">
-    <section class="card console">
-      <div class="card-head">
-        <h2>Console</h2>
-        <span class="hint">click and type · <kbd>Ctrl</kbd>+<kbd>C</kbd> stops the foreground program</span>
-      </div>
-      <div id="terminal"></div>
-      <div class="launcher">
-        <span class="launcher-label">Quick run</span>
-        <div id="programs" class="chips"></div>
+  <!-- ===================== main views ===================== -->
+  <main class="main">
+
+    <section class="view active" id="view-terminal">
+      <div class="window">
+        <div class="titlebar">
+          <span class="lights"><i class="r"></i><i class="y"></i><i class="g"></i></span>
+          <span class="wtab"><svg viewBox="0 0 24 24"><path d="M5 8l4 4-4 4M11 16h8"/></svg>Micro-OS Shell<span id="conn-dot" class="conn"></span></span>
+          <span class="hint right">click to type · <kbd>Ctrl</kbd>+<kbd>C</kbd> stops a program</span>
+        </div>
+        <div id="terminal"></div>
       </div>
     </section>
 
-    <div class="side">
-      <div class="tiles">
-        <div class="tile"><span class="tile-label">CPU busy</span><span id="t-cpu" class="tile-value">–</span><span id="t-cpu-sub" class="tile-sub">&nbsp;</span></div>
-        <div class="tile"><span class="tile-label">Context switches</span><span id="t-sw" class="tile-value">–</span><span class="tile-sub">per second</span></div>
-        <div class="tile"><span class="tile-label">Tasks</span><span id="t-tasks" class="tile-value">–</span><span id="t-tasks-sub" class="tile-sub">&nbsp;</span></div>
-        <div class="tile"><span class="tile-label">Uptime</span><span id="t-up" class="tile-value">–</span><span id="t-ticks" class="tile-sub">&nbsp;</span></div>
-      </div>
-
-      <section class="card">
-        <div class="card-head">
-          <h2>CPU share by task</h2>
-          <span class="hint">last 60 seconds</span>
-        </div>
-        <canvas id="cpu-chart" height="170"></canvas>
+    <section class="view" id="view-processes">
+      <div class="panel">
+        <div class="panel-head"><h2>CPU share by task</h2><span class="hint">last 60 seconds</span></div>
+        <canvas id="cpu-chart" height="190"></canvas>
         <div id="legend" class="legend"></div>
-      </section>
-
-      <section class="card">
-        <div class="card-head">
-          <h2>Tasks</h2>
-          <span id="sched-info" class="hint"></span>
-        </div>
-        <table class="tasks">
-          <thead>
-            <tr><th>PID</th><th>Name</th><th>State</th><th class="num">Prio</th><th class="num">Level</th><th class="num">CPU ticks</th><th>Share</th></tr>
-          </thead>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>All tasks</h2><span id="sched-line" class="hint"></span></div>
+        <table class="table">
+          <thead><tr><th>PID</th><th>Name</th><th>State</th><th class="num">Priority</th><th class="num">Level</th><th class="num">CPU ticks</th><th class="num">Dispatches</th><th>Share</th><th></th></tr></thead>
           <tbody id="task-rows"></tbody>
         </table>
-      </section>
-
-      <div class="two">
-        <section class="card">
-          <div class="card-head"><h2>Kernel heap</h2><span id="heap-pct" class="hint"></span></div>
-          <div class="bar"><div id="heap-used" class="bar-fill"></div><div id="heap-peak" class="bar-peak"></div></div>
-          <dl id="heap-stats" class="stats"></dl>
-        </section>
-        <section class="card">
-          <div class="card-head"><h2>Scheduler</h2><span id="sched-policy" class="hint"></span></div>
-          <dl id="sched-stats" class="stats"></dl>
-        </section>
       </div>
-
-      <section class="card">
-        <div class="card-head"><h2>Activity</h2><span class="hint">tasks starting and finishing</span></div>
+      <div class="panel">
+        <div class="panel-head"><h2>Activity</h2><span class="hint">tasks starting and finishing</span></div>
         <ul id="activity" class="activity"><li class="muted">waiting for the kernel…</li></ul>
-      </section>
-    </div>
-  </main>
-
-  <main id="tab-tests" class="tab">
-    <section class="card">
-      <div class="card-head">
-        <h2>Test suite</h2>
-        <button id="run-tests" class="btn primary">Run all tests</button>
       </div>
-      <p class="hint">Host unit tests, the 59 in-kernel checks (TC1–TC6 and mechanism demos), cross-boot repeatability, the shell smoke test and the plots. Takes about a minute and runs in a separate QEMU.</p>
-      <pre id="test-log" class="log">No run yet in this session.</pre>
     </section>
-    <section class="card">
-      <div class="card-head"><h2>Checks</h2><span id="check-summary" class="hint"></span></div>
-      <div id="checks" class="checks"></div>
+
+    <section class="view" id="view-memory">
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><h2>Kernel heap</h2><span id="heap-pct" class="hint"></span></div>
+          <div class="bar"><div id="heap-used" class="bar-fill"></div><div id="heap-peak" class="bar-peak" title="peak"></div></div>
+          <dl id="heap-stats" class="stats"></dl>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>How it works</h2></div>
+          <p class="prose">The heap is a <b>first-fit free list</b>: free blocks are kept in address order, a request takes the first block that fits and splits off the rest, and freed blocks merge with free neighbours. A header on every block records its size and a magic number, so double and foreign frees are refused. Try <code>memtest 4096</code> and watch the graph.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Heap in use</h2><span class="hint">last 60 seconds</span></div>
+        <canvas id="heap-chart" height="170"></canvas>
+      </div>
     </section>
-    <section class="card">
-      <div class="card-head"><h2>Plots</h2><span class="hint">from analysis/analyze.py</span></div>
-      <div id="plots" class="plots"></div>
+
+    <section class="view" id="view-scheduler">
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><h2>Reboot with a scheduler</h2><span id="power-state" class="hint"></span></div>
+          <div class="form">
+            <label>Policy
+              <select id="policy">
+                <option value="rr">Round Robin</option>
+                <option value="prio">Priority (preemptive)</option>
+                <option value="aging">Priority + aging</option>
+                <option value="mlfq">Multi-level feedback queue</option>
+              </select>
+            </label>
+            <label>Quantum (ticks)<input id="quantum" type="number" min="1" max="50" value="4"></label>
+            <div class="row">
+              <button id="reboot" class="btn primary">Reboot</button>
+              <button id="poweroff" class="btn">Power off</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Counters</h2><span id="sched-policy" class="hint"></span></div>
+          <dl id="sched-stats" class="stats"></dl>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Context switches per second</h2><span class="hint">last 60 seconds</span></div>
+        <canvas id="switch-chart" height="170"></canvas>
+      </div>
+    </section>
+
+    <section class="view" id="view-programs">
+      <div class="panel">
+        <div class="panel-head"><h2>Programs</h2><span class="hint">Rust programs in kernel/src/programs/ — each runs as its own task</span></div>
+        <div id="program-cards" class="cards"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Write your own</h2></div>
+        <ol class="prose steps">
+          <li>Copy <code>kernel/src/programs/template.rs</code> to <code>myprog.rs</code> and edit <code>main</code>.</li>
+          <li>Add <code>mod myprog;</code> and one line to <code>PROGRAMS</code> in <code>programs/mod.rs</code>.</li>
+          <li>Restart the panel (<code>scripts/frontend.sh</code>); it rebuilds the kernel and your program appears here.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="view" id="view-tests">
+      <div class="panel">
+        <div class="panel-head"><h2>Test suite</h2><button id="run-tests" class="btn primary">Run all tests</button></div>
+        <p class="hint">Host unit tests, the in-kernel checks (TC1–TC6 and mechanism demos), cross-boot repeatability, the shell smoke test and the plots. About a minute; runs in a separate QEMU.</p>
+        <pre id="test-log" class="log">No run yet in this session.</pre>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Checks</h2><span id="check-summary" class="hint"></span></div>
+        <div id="checks" class="checks"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Plots</h2><span class="hint">click to enlarge</span></div>
+        <div id="plots" class="plots"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-about">
+      <div class="panel prose">
+        <h2 class="big">Micro-OS</h2>
+        <p>An educational operating-system kernel written in Rust for the CA-6 Operating Systems project. It boots on an emulated RISC-V computer (QEMU <code>virt</code>, OpenSBI firmware) inside WSL, and makes OS mechanisms visible instead of hiding them.</p>
+        <div class="layers">
+          <div><b>Boot</b><span>entry.S → kmain, command line from the device tree</span></div>
+          <div><b>Traps &amp; timer</b><span>trap.S saves registers; 1 ms SBI timer drives preemption</span></div>
+          <div><b>Tasks</b><span>task control blocks, 16 KiB stacks with overflow canaries</span></div>
+          <div><b>Scheduler</b><span>Round Robin, Priority, Priority + aging, MLFQ</span></div>
+          <div><b>Synchronization</b><span>IRQ spinlock, spinlock, blocking mutex, semaphore, deadlock detection</span></div>
+          <div><b>Memory</b><span>16 MiB first-fit free-list heap; bump and best-fit for comparison</span></div>
+          <div><b>System interface</b><span>sys:: API, programs, this shell</span></div>
+        </div>
+        <p class="hint">Docs: <code>docs/architecture.md</code>, <code>docs/design.md</code>, <code>docs/testing.md</code>, <code>docs/writing-programs.md</code>.</p>
+      </div>
     </section>
   </main>
 
-  <div id="lightbox" class="lightbox" hidden><img alt=""></div>
+  <!-- ===================== right column ===================== -->
+  <aside class="rail">
+    <div class="panel">
+      <div class="panel-head"><h2><svg class="icon" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>System Monitor</h2></div>
+      <div class="rings">
+        <div class="ring" id="ring-cpu"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>CPU</span></div>
+        <div class="ring" id="ring-mem"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>Heap</span></div>
+        <div class="ring" id="ring-tasks"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="32"/><circle class="val" cx="40" cy="40" r="32"/></svg><b>–</b><span>Tasks</span></div>
+      </div>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
-  <script src="/static/app.js"></script>
+    <div class="panel">
+      <div class="panel-head"><h2><svg class="icon" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>Running Processes</h2></div>
+      <table class="mini">
+        <thead><tr><th>PID</th><th>Name</th><th>Status</th></tr></thead>
+        <tbody id="mini-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2><svg class="icon" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Quick Run</h2></div>
+      <select id="quick-select" class="wide"></select>
+      <button id="quick-run" class="btn primary wide run"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>Run Program</button>
+    </div>
+  </aside>
+
+  <!-- ===================== status bar ===================== -->
+  <footer class="statusbar">
+    <span class="sb-item"><i id="sb-dot" class="dot"></i>OS: Micro-OS</span>
+    <span class="sb-sep"></span><span class="sb-item">Arch: riscv64</span>
+    <span class="sb-sep"></span><span class="sb-item" id="sb-sched">Scheduler: –</span>
+    <span class="sb-sep"></span><span class="sb-item" id="sb-uptime">Uptime: 00:00:00</span>
+    <span class="sb-keys">
+      <button data-key="help"><kbd>F1</kbd>Help</button>
+      <button data-key="sysinfo"><kbd>F2</kbd>Sysinfo</button>
+      <button data-key="ps"><kbd>F3</kbd>Processes</button>
+      <button data-key="mem"><kbd>F4</kbd>Memory</button>
+    </span>
+  </footer>
+</div>
+
+<div id="lightbox" class="lightbox" hidden><img alt=""></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>

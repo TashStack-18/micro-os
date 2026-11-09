@@ -19,7 +19,7 @@ use microos_core::sched::PolicyKind;
 
 use crate::kernel::console::{self, Level};
 use crate::scheduler::{self, Config, SpawnOpts, MAX_TASKS};
-use crate::{memory, programs, sys, timer};
+use crate::{drivers, memory, programs, sys, timer};
 
 const CTRL_C: u8 = 0x03;
 const BACKSPACE: u8 = 0x08;
@@ -46,12 +46,43 @@ pub fn run(args: &BootArgs) -> u32 {
     0
 }
 
-fn shell_main() {
+// ANSI colours (understood by xterm.js and real terminals alike).
+const PURPLE: &str = "\x1b[38;5;141m";
+const GREEN: &str = "\x1b[38;5;114m";
+const DIM: &str = "\x1b[90m";
+const BOLD: &str = "\x1b[1m";
+const RESET: &str = "\x1b[0m";
+
+/// Checklist of what the kernel actually brought up, read from live state.
+fn banner() {
+    let ok = |text: core::fmt::Arguments| println!("{GREEN}[\u{2713}]{RESET}    {}", text);
+    let h = memory::stats();
     println!();
-    println!("Micro-OS shell - type 'help' for commands, 'progs' for programs, 'exit' to power off.");
+    println!("{PURPLE}[BOOT]{RESET} Micro-OS v{} (riscv64, S-mode, {})", env!("CARGO_PKG_VERSION"), drivers::sbi::impl_name());
+    ok(format_args!("Trap vector installed (timer interrupts on)"));
+    ok(format_args!("Kernel heap ready ({} MiB, first-fit free list)", h.capacity >> 20));
+    ok(format_args!("Timer running ({} us per tick)", timer::tick_us()));
+    if let Some((policy, quantum, preemptive, _, _)) = scheduler::run_info() {
+        let mode = if preemptive { "preemptive" } else { "cooperative" };
+        ok(format_args!("Scheduler initialized ({}, quantum {} ticks, {})", policy, quantum, mode));
+    }
+    ok(format_args!("Starting tasks..."));
+    for t in scheduler::snapshot() {
+        println!("         {DIM}->{RESET} {} (pid: {})", t.name, t.tid);
+    }
+    println!("{GREEN}[\u{2713}]{RESET}    {BOLD}Micro-OS shell is ready!{RESET} {DIM}type 'help' for commands, 'progs' for programs{RESET}");
+    println!();
+}
+
+fn prompt() {
+    print!("{PURPLE}{BOLD}micro@os{RESET}:{GREEN}~{RESET}$ ");
+}
+
+fn shell_main() {
+    banner();
     let mut line = String::new();
     loop {
-        print!("microos> ");
+        prompt();
         read_line(&mut line);
         let words: Vec<&str> = line.split_whitespace().collect();
         let Some((&cmd, rest)) = words.split_first() else { continue };
@@ -63,6 +94,7 @@ fn shell_main() {
             "top" => top(),
             "sched" => sched(),
             "mem" => mem(),
+            "sysinfo" => sysinfo(),
             "uptime" => println!("up {} ms, {} timer ticks of {} us", sys::uptime_ms(), timer::ticks(), timer::tick_us()),
             "kill" => kill(rest),
             "trace" => set_trace(rest),
@@ -145,21 +177,51 @@ fn read_line(line: &mut String) {
 }
 
 fn help() {
-    println!("commands:");
-    println!("  progs                  list programs you can run");
-    println!("  run [-p N] PROG ARGS [&]  start a program (priority N 0-7; '&' = background)");
-    println!("  PROG ARGS [&]          shortcut for 'run PROG ARGS'");
-    println!("  ps                     list tasks: state, priority, CPU ticks");
-    println!("  top                    live task view, refreshed every second (any key quits)");
-    println!("  sched                  scheduler policy and statistics");
-    println!("  mem                    kernel heap statistics");
-    println!("  kill PID               ask a task to stop (like Ctrl-C)");
-    println!("  uptime | echo ... | clear");
-    println!("  trace on|off           show the kernel's #T trace events");
-    println!("  log error|warn|info|debug   kernel log level");
-    println!("  exit                   power off");
-    println!("while a foreground program runs, Ctrl-C asks it to stop.");
-    println!("leave QEMU at any time: Ctrl-A then X.");
+    const LEFT: [(&str, &str); 8] = [
+        ("help", "show this help"),
+        ("progs", "list programs"),
+        ("run [-p N] PROG [&]", "run a program"),
+        ("PROG ARGS [&]", "same as run PROG"),
+        ("ps", "list tasks"),
+        ("top", "live task view"),
+        ("kill PID", "ask a task to stop"),
+        ("exit", "power off"),
+    ];
+    const RIGHT: [(&str, &str); 8] = [
+        ("sched", "scheduler statistics"),
+        ("mem", "kernel heap usage"),
+        ("sysinfo", "system information"),
+        ("uptime", "time since boot"),
+        ("trace on|off", "kernel trace events"),
+        ("log LEVEL", "error|warn|info|debug"),
+        ("echo TEXT", "print text"),
+        ("clear", "clear the screen"),
+    ];
+    println!("Available commands:");
+    for ((lc, ld), (rc, rd)) in LEFT.iter().zip(RIGHT.iter()) {
+        println!(
+            "  {PURPLE}{:<20}{RESET}{DIM}-{RESET} {:<20} {DIM}|{RESET}  {PURPLE}{:<13}{RESET}{DIM}-{RESET} {}",
+            lc, ld, rc, rd
+        );
+    }
+    println!("{DIM}N = priority 0 (high) to 7 (low); '&' runs in the background; Ctrl-C stops the foreground program.{RESET}");
+}
+
+fn sysinfo() {
+    let (major, minor) = drivers::sbi::spec_version();
+    let h = memory::stats();
+    let (ks, ke) = memory::kernel_image();
+    let row = |k: &str, v: core::fmt::Arguments| println!("  {PURPLE}{:<12}{RESET} {}", k, v);
+    row("os", format_args!("Micro-OS v{}", env!("CARGO_PKG_VERSION")));
+    row("machine", format_args!("QEMU virt, 1 RISC-V hart (riscv64gc), supervisor mode"));
+    row("firmware", format_args!("{} (SBI v{}.{})", drivers::sbi::impl_name(), major, minor));
+    row("kernel", format_args!("{:#x}..{:#x} ({} KiB)", ks, ke, (ke - ks) / 1024));
+    row("heap", format_args!("{} MiB first-fit free list, {} B in use", h.capacity >> 20, h.bytes_in_use));
+    row("timer", format_args!("{} us per tick, {} ticks so far", timer::tick_us(), timer::ticks()));
+    if let Some((policy, quantum, _, _, _)) = scheduler::run_info() {
+        row("scheduler", format_args!("{} with a {}-tick quantum, max {} tasks", policy, quantum, MAX_TASKS));
+    }
+    row("uptime", format_args!("{} ms", sys::uptime_ms()));
 }
 
 fn list_programs() {
