@@ -1,0 +1,21 @@
+[Unit]
+Description=Micro-OS: allow snap user daemons before snaps are seeded
+# The Snap Store snap runs a per-user daemon. Debian's snapd treats that as
+# an experimental feature and refuses to seed the image without it, which
+# leaves snapd.seeded.service (and so the whole boot) waiting forever.
+# The setting is kept in snapd's state, so it is needed only once: after it
+# succeeds a marker file skips this unit on every later boot (it would
+# otherwise wake snapd early and add about 3 s to each boot).
+ConditionPathExists=!/var/lib/microos/snap-features-set
+After=snapd.socket
+Before=snapd.seeded.service
+Wants=snapd.socket
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/snap set system experimental.user-daemons=true
+ExecStartPost=/bin/sh -c 'mkdir -p /var/lib/microos && touch /var/lib/microos/snap-features-set'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=snapd.seeded.service

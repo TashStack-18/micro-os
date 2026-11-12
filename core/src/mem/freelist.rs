@@ -92,6 +92,49 @@ impl FreeListAllocator {
         self.fit
     }
 
+    /// Heap map: split the region into `out.len()` equal slices and write how
+    /// full each one is, 0 (all free) to 255 (no free byte), by walking the
+    /// free list. Reads only; allocates nothing, so it is safe to call while
+    /// the heap lock is held. Block headers count as used.
+    pub fn occupancy(&self, out: &mut [u8]) {
+        let n = out.len();
+        if n == 0 {
+            return;
+        }
+        let span = self.end.saturating_sub(self.start);
+        if span == 0 {
+            out.fill(0);
+            return;
+        }
+        // Free bytes per slice (at most 256 slices, a fixed stack array, so
+        // nothing is allocated); each free block is split across the slices
+        // it spans.
+        let slice = span.div_ceil(n);
+        let mut free = [0usize; 256];
+        let buckets = n.min(free.len());
+        let mut node = self.head;
+        while !node.is_null() {
+            // SAFETY: every node on the list was written by insert_free/init
+            // inside [start, end) and is not part of a live block; the list is
+            // only changed through &mut self, which this &self call excludes.
+            let (addr, size, next) = unsafe { (node as usize, (*node).size, (*node).next) };
+            let (mut a, b) = (addr - self.start, addr - self.start + size);
+            while a < b {
+                let i = (a / slice).min(buckets - 1);
+                let edge = ((i + 1) * slice).min(b);
+                free[i] += edge - a;
+                a = edge;
+            }
+            node = next;
+        }
+        for (i, o) in out.iter_mut().enumerate().take(buckets) {
+            let len = slice.min(span - (i * slice).min(span)).max(1);
+            let used = len.saturating_sub(free[i].min(len));
+            *o = ((used * 255 + len / 2) / len) as u8;
+        }
+        out[buckets..].fill(0);
+    }
+
     /// Try to place `layout` in the free block `[block, block + size)`.
     fn place(block: usize, size: usize, layout: Layout) -> Option<Placement> {
         let align = layout.align().max(HEADER);
@@ -255,6 +298,9 @@ impl RegionAllocator for FreeListAllocator {
         }
     }
 
+    // Safety: the Allocator::dealloc contract (no use of `ptr` afterwards).
+    // free_block checks range, alignment and the header magic before
+    // writing anything, so a bad pointer is refused rather than freed.
     unsafe fn dealloc(&mut self, ptr: *mut u8, _layout: Layout) -> Result<(), FreeError> {
         match self.free_block(ptr) {
             Ok(size) => {
@@ -411,5 +457,24 @@ mod tests {
             let s = a.stats();
             assert_eq!((s.free_blocks, s.bytes_in_use, s.rejected_frees), (1, 0, 0));
         }
+    }
+
+    #[test]
+    fn occupancy_maps_used_and_free_slices() {
+        let mut buf = vec![0u8; 64 * 1024 + 16];
+        let mut a = FreeListAllocator::empty(Fit::First);
+        unsafe { a.init(buf.as_mut_ptr() as usize, buf.len()) };
+        let mut map = [0u8; 8];
+        a.occupancy(&mut map);
+        assert!(map.iter().all(|&v| v == 0), "empty heap must map as free: {map:?}");
+        // First-fit fills from the front: about one slice of 8 KiB.
+        let p = a.alloc(Layout::from_size_align(8 * 1024 - 64, 16).unwrap());
+        assert!(!p.is_null());
+        a.occupancy(&mut map);
+        assert!(map[0] > 240, "front slice should be (nearly) full: {map:?}");
+        assert!(map[2..].iter().all(|&v| v == 0), "rest stays free: {map:?}");
+        unsafe { a.dealloc(p, Layout::from_size_align(8 * 1024 - 64, 16).unwrap()).unwrap() };
+        a.occupancy(&mut map);
+        assert!(map.iter().all(|&v| v == 0), "freed heap maps as free again: {map:?}");
     }
 }

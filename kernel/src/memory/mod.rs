@@ -44,6 +44,12 @@ pub fn stats() -> AllocStats {
     HEAP.inner.lock().stats()
 }
 
+/// Heap map: how full each of `out.len()` equal slices of the heap is
+/// (0 free .. 255 full), read from the real free list. Allocates nothing.
+pub fn occupancy(out: &mut [u8]) {
+    HEAP.inner.lock().occupancy(out);
+}
+
 /// Free through the kernel heap and report whether the request was accepted
 /// (`GlobalAlloc::dealloc` cannot return an error).
 ///
@@ -66,6 +72,8 @@ unsafe impl GlobalAlloc for KernelHeap {
         p
     }
 
+    // Safety: GlobalAlloc's contract (ptr came from this allocator with this
+    // layout); a pointer that breaks it is detected and refused, not freed.
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
         if let Err(e) = self.inner.lock().dealloc(ptr, layout) {
             kerror!("heap: rejected free of {:p}: {:?}", ptr, e);

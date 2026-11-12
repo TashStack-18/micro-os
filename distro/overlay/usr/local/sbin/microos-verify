@@ -1,0 +1,119 @@
+#!/bin/sh
+# microos-verify: check that every component of this stage works.
+#
+#   sudo microos-verify       run the checks (needs internet for LAN/APT/Snap)
+#   microos-verify --auto     (service) only acts inside the QEMU test harness
+#
+# Prints one line per check: PASS / FAIL / SKIP.
+. /usr/local/lib/microos/common.sh
+
+if [ "${1:-}" = --auto ]; then
+    vm_flag verify || exit 0
+    wait_for_boot
+fi
+
+PASS=0; FAIL=0
+check() { # name, command...
+    name="$1"; shift
+    # snap prints "WARNING: There is 1 new warning" before its real output.
+    if out=$("$@" 2>&1); then
+        out=$(echo "$out" | grep -v '^WARNING: There ')
+        PASS=$((PASS + 1)); echo "PASS  $name${out:+  ($(echo "$out" | head -1 | cut -c1-90))}"
+    else
+        FAIL=$((FAIL + 1)); echo "FAIL  $name  ($(echo "$out" | tail -1 | cut -c1-90))"
+    fi
+}
+skip() { echo "SKIP  $1"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+wait_online() {
+    i=0
+    while [ $i -lt 45 ]; do
+        nmcli -t -f STATE general 2>/dev/null | grep -q '^connected' && return 0
+        sleep 1; i=$((i + 1))
+    done
+    nmcli -t -f STATE general 2>&1; return 1
+}
+
+report() {
+echo "MICROOS-VERIFY-BEGIN stage=$STAGE kernel=$(uname -r)"
+state=$(systemctl is-system-running 2>/dev/null)
+echo "INFO  boot state: $state"
+case "$state" in running|degraded) ;; *)
+    systemctl list-jobs --no-legend --no-pager 2>/dev/null | head -15 | sed 's/^/INFO  pending job: /' ;;
+esac
+systemctl --failed --no-legend --no-pager 2>/dev/null | head -10 | sed 's/^/INFO  failed unit: /'
+
+# S0 base
+check "base: kernel booted"            uname -sr
+check "base: systemd running"          sh -c 'systemctl is-system-running | grep -Eq "running|degraded" && systemctl --version | head -1'
+if [ "$STAGE" -lt 4 ]; then
+    check "base: no APT yet (expected)" sh -c '! command -v apt-get'
+fi
+
+# S1 LAN
+if [ "$STAGE" -ge 1 ]; then
+    check "lan: NetworkManager active"     systemctl is-active NetworkManager
+    check "lan: wired link connected"      wait_online
+    check "lan: Ethernet device"           sh -c 'nmcli -t -f DEVICE,TYPE,STATE device | grep ":ethernet:connected"'
+    check "lan: Realtek r8169 driver"      modinfo -F filename r8169
+    check "lan: internet over HTTPS"       sh -c 'curl -sS -o /dev/null -w "HTTP %{http_code}" https://deb.debian.org/'
+fi
+
+# S2 Wi-Fi
+if [ "$STAGE" -ge 2 ]; then
+    check "wifi: RTL8852BE driver (rtw89_8852be)" modinfo -F filename rtw89_8852be
+    check "wifi: RTL8852B firmware"        sh -c 'ls /lib/firmware/rtw89/rtw8852b_fw*.bin* | head -1'
+    check "wifi: wpa_supplicant"           sh -c 'wpa_supplicant -v | head -1'
+    check "wifi: NetworkManager Wi-Fi"     sh -c 'nmcli radio wifi'
+    check "wifi: regulatory database"      sh -c 'ls /lib/firmware/regulatory.db*'
+    if nmcli -t -f TYPE device | grep -q '^wifi$'; then
+        check "wifi: adapter present"      sh -c 'nmcli -t -f DEVICE,TYPE,STATE device | grep ":wifi:"'
+    else
+        skip "wifi: no Wi-Fi adapter here (a VM has none; run this on the laptop)"
+    fi
+fi
+
+# S3 laptop hardware
+if [ "$STAGE" -ge 3 ]; then
+    check "hw: Intel CPU microcode"        sh -c 'ls /lib/firmware/intel-ucode | wc -l | sed "s/$/ microcode files/"'
+    check "hw: Intel graphics firmware"    sh -c 'ls -d /lib/firmware/i915 /lib/firmware/xe 2>/dev/null | head -1'
+    check "hw: audio (SOF) firmware"       sh -c 'ls -d /lib/firmware/intel/sof* | head -1'
+    check "hw: Bluetooth stack"            sh -c 'bluetoothctl --version'
+    check "hw: Realtek Bluetooth firmware" sh -c 'ls /lib/firmware/rtl_bt/rtl8852b* | head -1'
+    check "hw: PCI devices visible"        sh -c 'lspci | wc -l | sed "s/$/ PCI devices/"'
+fi
+
+# S4 APT + aptitude
+if [ "$STAGE" -ge 4 ]; then
+    check "apt: apt-get update"            sh -c 'apt-get update -qq && echo "package lists downloaded"'
+    check "apt: install a package (hello)" sh -c 'DEBIAN_FRONTEND=noninteractive apt-get install -y -qq hello >/dev/null && hello'
+    check "apt: aptitude works"            sh -c 'aptitude search "^hello$" | head -1'
+    check "apt: package count"             sh -c 'dpkg-query -f ".\n" -W | wc -l | sed "s/$/ packages installed/"'
+fi
+
+# S5 snapd
+if [ "$STAGE" -ge 5 ]; then
+    # snapd is socket-activated: it starts on demand and exits when idle.
+    check "snap: snapd socket listening"   systemctl is-active snapd.socket
+    check "snap: snapd answers"           sh -c "snap version | grep ^snapd"
+    check "snap: seeded"                   sh -c 'snap wait system seed.loaded && echo seeded'
+    check "snap: store reachable (find)"   sh -c 'snap find hello-world | sed -n 2p'
+    check "snap: install from store"       sh -c 'snap install hello-world >/dev/null && /snap/bin/hello-world'
+fi
+
+# S6 desktop + Snap Store
+if [ "$STAGE" -ge 6 ]; then
+    check "desktop: login screen (LightDM)" systemctl is-active lightdm
+    check "store: Snap Store installed"    sh -c 'snap list snap-store | sed -n 2p'
+    check "store: Snap Store launcher"     sh -c 'ls /var/lib/snapd/desktop/applications/ | grep -i snap-store'
+fi
+
+echo "MICROOS-VERIFY-END passed=$PASS failed=$FAIL"
+}
+
+report 2>&1 | to_console
+if [ "${1:-}" = --auto ]; then
+    sync
+    systemctl poweroff
+fi

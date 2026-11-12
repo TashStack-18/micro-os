@@ -60,6 +60,8 @@ impl RegionAllocator for BumpAllocator {
         }
     }
 
+    // Safety: the Allocator::dealloc contract (no use of `ptr` afterwards).
+    // Only bounds and the live count are read; memory is never touched.
     unsafe fn dealloc(&mut self, ptr: *mut u8, _layout: Layout) -> Result<(), FreeError> {
         let p = ptr as usize;
         let verdict = if p < self.start || p >= self.next {

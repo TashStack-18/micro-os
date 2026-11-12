@@ -1,0 +1,9 @@
+[Unit]
+Description=Micro-OS: component checks (only inside the QEMU test harness)
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/microos-verify --auto
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Micro-OS: record this boot's start-up time (systemd-analyze)
+
+[Service]
+# Type=simple: the service waits for boot to finish in the background, so it
+# never delays the boot it is measuring.
+Type=simple
+ExecStart=/usr/local/sbin/microos-boottime --record
+
+[Install]
+WantedBy=multi-user.target

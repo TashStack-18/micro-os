@@ -1,0 +1,46 @@
+#!/bin/sh
+# microos-boottime: how long did this boot take?
+#
+#   microos-boottime            boot time of the current boot (systemd-analyze)
+#   microos-boottime --history  every recorded boot on this machine
+#   microos-boottime --record   (run by microos-boottime.service at every boot)
+#
+# Log: /var/log/microos-boottime.log
+. /usr/local/lib/microos/common.sh
+LOG=/var/log/microos-boottime.log
+COUNT=/var/lib/microos/boot-count
+
+case "${1:-}" in
+--history)
+    grep -h '^Startup finished' "$LOG" 2>/dev/null | nl -w3 -s'. ' || echo "no boots recorded yet"
+    exit 0
+    ;;
+--record)
+    wait_for_boot
+    mkdir -p /var/lib/microos
+    n=$(( $(cat "$COUNT" 2>/dev/null || echo 0) + 1 ))
+    echo "$n" > "$COUNT"
+    {
+        echo "MICROOS-BOOTTIME-BEGIN stage=$STAGE boot=$n kernel=$(uname -r) date=$(date -u +%FT%TZ)"
+        systemd-analyze 2>&1
+        echo "--- slowest units"
+        systemd-analyze blame --no-pager 2>&1 | head -12
+        echo "--- critical chain"
+        systemd-analyze critical-chain --no-pager 2>&1 | head -25
+        echo "MICROOS-BOOTTIME-END"
+    } > /run/microos-boottime.txt
+    cat /run/microos-boottime.txt >> "$LOG"
+    to_console < /run/microos-boottime.txt
+    if vm_flag measure; then
+        sync
+        systemctl poweroff
+    fi
+    ;;
+*)
+    echo "Micro-OS Linux stage $STAGE ($(. /etc/microos-release; echo "$STAGE_NAME"))"
+    systemd-analyze
+    echo
+    echo "Slowest units:"
+    systemd-analyze blame --no-pager | head -10
+    ;;
+esac
