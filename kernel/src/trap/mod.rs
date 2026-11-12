@@ -16,7 +16,21 @@ pub struct TrapFrame {
     pub sepc: usize,
 }
 
+/// sstatus.SPP: the privilege level the trap came from (0 = U-mode).
+const SSTATUS_SPP: usize = 1 << 8;
+/// scause exception code for `ecall` executed in U-mode.
+const EXC_ECALL_FROM_U: usize = 8;
+
+impl TrapFrame {
+    /// Did this trap interrupt U-mode (user) code?
+    pub fn from_user(&self) -> bool {
+        self.sstatus & SSTATUS_SPP == 0
+    }
+}
+
 pub fn init() {
+    // trap.S reads sscratch == 0 as "trap came from S-mode".
+    arch::clear_sscratch();
     // SAFETY: __trap_entry is the 16-byte-aligned routine in trap.S that
     // saves and restores the full register state around trap_handler.
     unsafe { arch::write_stvec(__trap_entry as unsafe extern "C" fn() as usize) };
@@ -54,6 +68,14 @@ extern "C" fn trap_handler(tf: &mut TrapFrame) {
             arch::IRQ_S_TIMER => scheduler::on_timer_interrupt(),
             _ => kwarn!("ignoring unexpected interrupt {}", code),
         }
+    } else if code == EXC_ECALL_FROM_U {
+        // System call: resume after the 4-byte ecall instruction.
+        tf.sepc += 4;
+        crate::user::syscall(tf);
+    } else if tf.from_user() {
+        // A user program did something it may not (e.g. a privileged
+        // instruction): stop that program, keep the kernel running.
+        crate::user::kill_current(exception_name(code), tf.sepc, arch::read_stval());
     } else {
         panic!(
             "unhandled exception: {} (scause={:#x}) at sepc={:#x}, stval={:#x}",

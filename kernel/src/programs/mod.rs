@@ -14,9 +14,11 @@ mod counter;
 mod fib;
 mod hello;
 mod memtest;
+mod pingpong;
 mod primes;
 mod spin;
 mod template;
+mod user;
 
 pub struct Program {
     pub name: &'static str,
@@ -33,6 +35,8 @@ pub const PROGRAMS: &[Program] = &[
     Program { name: "fib", usage: "fib [n=40]", about: "Fibonacci numbers with u128", main: fib::main },
     Program { name: "spin", usage: "spin [seconds=5] [yield]", about: "CPU hog (or polite with 'yield'): shows its CPU share", main: spin::main },
     Program { name: "memtest", usage: "memtest [kib=256]", about: "allocate, fill, verify and free heap memory", main: memtest::main },
+    Program { name: "pingpong", usage: "pingpong [rounds=20] [ms=80]", about: "two tasks hand two semaphores back and forth (real wake-ups)", main: pingpong::main },
+    Program { name: "user", usage: "user [hello|priv|badptr|unknown|spin] [arg]", about: "run a program in U-mode; it reaches the kernel only via ecall", main: user::main },
     Program { name: "template", usage: "template", about: "starting point for your own program", main: template::main },
 ];
 

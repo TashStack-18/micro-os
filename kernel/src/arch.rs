@@ -58,6 +58,13 @@ pub unsafe fn write_stvec(addr: usize) {
     asm!("csrw stvec, {}", in(reg) addr, options(nostack));
 }
 
+/// Mark "currently in the kernel" for trap.S (see the sscratch protocol there).
+pub fn clear_sscratch() {
+    // SAFETY: sscratch is only read by trap.S; zero means "trap from S-mode",
+    // which is true whenever this runs.
+    unsafe { asm!("csrw sscratch, zero", options(nomem, nostack)) };
+}
+
 pub fn read_scause() -> usize {
     let v: usize;
     // SAFETY: plain CSR read.

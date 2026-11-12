@@ -20,6 +20,7 @@ mod research;
 mod sched_tests;
 mod stress;
 mod sync_tests;
+mod user_tests;
 
 use alloc::string::String;
 use core::fmt;
@@ -83,6 +84,7 @@ const ALL: &[(&str, Scenario)] = &[
     ("mem", mem_tests::allocator_comparison),
     ("sched_cmp", sched_tests::policy_comparison),
     ("quantum_sweep", sched_tests::quantum_sweep),
+    ("syscall", user_tests::syscalls),
     ("r3_quick", r3_quick),
 ];
 

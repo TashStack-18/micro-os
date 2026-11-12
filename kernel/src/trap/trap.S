@@ -1,8 +1,15 @@
-# Supervisor trap entry.
+# Supervisor trap entry and exit.
 #
-# All tasks run in S-mode on their own kernel stack, so a trap simply pushes
-# a TrapFrame onto the *current* stack:
+# Kernel tasks run in S-mode on their own kernel stack. A task may also drop
+# to U-mode (user mode, see src/user/) on a separate user stack; a trap from
+# U-mode must then switch to the task's kernel stack before saving anything.
 #
+# sscratch tells the two cases apart:
+#   sscratch == 0       the trap came from S-mode: keep using sp
+#   sscratch == ksp     the trap came from U-mode: ksp is this task's kernel
+#                       stack top, set by the return-to-user path below
+#
+# TrapFrame pushed on the kernel stack:
 #   offset  0..256  x0..x31   (x0 slot unused, x2 = sp before the trap)
 #   offset  256     sstatus
 #   offset  264     sepc
@@ -16,6 +23,10 @@
     .globl __trap_entry
     .align 4
 __trap_entry:
+    csrrw   sp, sscratch, sp        # sp = sscratch, sscratch = old sp
+    bnez    sp, 1f                  # non-zero: came from U-mode, sp = kernel stack
+    csrrw   sp, sscratch, sp        # zero: came from S-mode, swap back (sscratch = 0)
+1:
     addi    sp, sp, -288
     sd      x1, 8(sp)
     sd      x3, 24(sp)
@@ -47,7 +58,12 @@ __trap_entry:
     sd      x29, 232(sp)
     sd      x30, 240(sp)
     sd      x31, 248(sp)
+    # Interrupted sp: the user sp (left in sscratch) or, from S-mode, the
+    # kernel sp before this frame. sscratch becomes 0 while in the kernel.
+    csrrw   t0, sscratch, zero
+    bnez    t0, 2f
     addi    t0, sp, 288
+2:
     sd      t0, 16(sp)
     csrr    t0, sstatus
     sd      t0, 256(sp)
@@ -57,14 +73,23 @@ __trap_entry:
     mv      a0, sp
     call    trap_handler
 
+    .globl __trap_return
+__trap_return:
     ld      t0, 256(sp)
     csrw    sstatus, t0
     ld      t0, 264(sp)
     csrw    sepc, t0
+    # Returning to U-mode (sstatus.SPP = 0): the next trap must find this
+    # task's kernel stack top in sscratch.
+    csrr    t0, sstatus
+    andi    t0, t0, 0x100
+    bnez    t0, 3f
+    addi    t0, sp, 288
+    csrw    sscratch, t0
+3:
     ld      x1, 8(sp)
     ld      x3, 24(sp)
     ld      x4, 32(sp)
-    ld      x5, 40(sp)
     ld      x6, 48(sp)
     ld      x7, 56(sp)
     ld      x8, 64(sp)
@@ -91,5 +116,31 @@ __trap_entry:
     ld      x29, 232(sp)
     ld      x30, 240(sp)
     ld      x31, 248(sp)
-    addi    sp, sp, 288
+    csrr    t0, sstatus
+    andi    t0, t0, 0x100
+    bnez    t0, 4f
+    ld      t0, 40(sp)
+    ld      sp, 16(sp)              # to U-mode: switch to the user stack
+    sret
+4:
+    ld      t0, 40(sp)
+    addi    sp, sp, 288             # to S-mode: pop the frame
+    sret
+
+# enter_user(entry: a0, user_sp: a1, arg: a2) -> !
+# Leave the calling kernel task for U-mode at `entry` on `user_sp`, with
+# `arg` in a0. Interrupts are masked first: from here until sret, sscratch
+# is non-zero while still in S-mode, which a trap must never see.
+    .globl __enter_user
+__enter_user:
+    csrci   sstatus, 2              # SIE = 0
+    csrw    sepc, a0
+    li      t0, 0x100
+    csrc    sstatus, t0             # SPP = 0: sret goes to U-mode
+    li      t0, 0x20
+    csrs    sstatus, t0             # SPIE = 1: interrupts on in U-mode
+    csrw    sscratch, sp            # kernel stack for the first trap
+    mv      sp, a1
+    mv      a0, a2
+    mv      ra, zero
     sret

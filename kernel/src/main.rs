@@ -25,6 +25,7 @@ mod sys;
 mod task;
 mod timer;
 mod trap;
+mod user;
 
 use drivers::{qemu_exit, sbi};
 use kernel::console::{self, Level};
@@ -43,7 +44,7 @@ pub extern "C" fn kmain(hartid: usize, dtb: usize) -> ! {
     }
     console::set_trace(args.flag("trace", true));
     kinfo!("command line: '{}'", args.raw());
-    ktrace!("BOOT", "stage=args");
+    ktrace!("BOOT", "stage=args fw={} sbi={}.{}", sbi::impl_name(), major, minor);
 
     trap::init();
     kinfo!("trap vector installed");
@@ -53,7 +54,7 @@ pub extern "C" fn kmain(hartid: usize, dtb: usize) -> ! {
     let (kstart, kend) = memory::kernel_image();
     kinfo!("kernel image {:#x}..{:#x} ({} KiB)", kstart, kend, (kend - kstart) / 1024);
     kinfo!("heap {:#x}..{:#x} ({} KiB, first-fit free list)", heap_start, heap_start + heap_size, heap_size / 1024);
-    ktrace!("BOOT", "stage=heap start={:#x} size={}", heap_start, heap_size);
+    ktrace!("BOOT", "stage=heap start={:#x} size={} kimg={:#x}-{:#x}", heap_start, heap_size, kstart, kend);
 
     let tick_us = args.get_u64("tick_us").unwrap_or(1000);
     timer::init(tick_us);

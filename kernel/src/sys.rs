@@ -2,9 +2,10 @@
 //!
 //! Programs in `src/programs/` should use only this module (plus `println!`
 //! and `alloc` collections). It is the boundary between "application" code
-//! and kernel internals, like a system-call table. Programs still run in
-//! S-mode as kernel tasks; there is no hardware protection between the two
-//! sides yet (see docs: Track D/F future work).
+//! and kernel internals, like a system-call table. These programs run in
+//! S-mode as kernel tasks, so the boundary is by convention only. Programs
+//! that need a hardware-enforced boundary run in U-mode instead and reach
+//! the kernel through real `ecall` system calls: see `crate::user`.
 
 use crate::{memory, scheduler, timer};
 
