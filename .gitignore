@@ -3,3 +3,4 @@ traces/*.log
 __pycache__/
 distro/out/
 distro/build/
+site/
