@@ -1546,12 +1546,16 @@ function mission(on) {
   const cols = Math.ceil(Math.sqrt(open.length)), rows = Math.ceil(open.length / cols);
   const cw = (W - pad * (cols + 1)) / cols, ch = (H - pad * (rows + 1)) / rows;
   open.forEach((a, i) => {
-    const el = win(a), r = el.getBoundingClientRect(), wr = ws.getBoundingClientRect();
+    const el = win(a);
+    // A window still in its open animation is scaled and shifted, and the animation would
+    // override the transform set here: finish it, then measure layout size, not the transformed box.
+    el.getAnimations().forEach((an) => an.finish());
+    const r = { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
     const k = Math.min(cw / r.width, ch / r.height, 1);
     const c = i % cols, row = Math.floor(i / cols);
     const tx = pad + c * (cw + pad) + (cw - r.width * k) / 2, ty = pad + row * (ch + pad) + (ch - r.height * k) / 2;
     el.style.transformOrigin = "0 0";
-    el.style.transform = `translate(${tx - (r.left - wr.left)}px, ${ty - (r.top - wr.top)}px) scale(${k})`;
+    el.style.transform = `translate(${tx - r.left}px, ${ty - r.top}px) scale(${k})`;
     el.tabIndex = 0;
     const l = document.createElement("span");
     l.className = "mission-label"; l.textContent = TITLE[a];
