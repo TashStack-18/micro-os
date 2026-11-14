@@ -159,7 +159,7 @@ const APPS = [
   ["memory", "Memory", "i-memory"],
   ["syscalls", "System calls", "i-syscall"],
   ["journal", "Journal", "i-journal"],
-  ["topo", "Topography", "i-topo"],
+  ["topo", "Kernel Map", "i-topo"],
   ["research", "Research", "i-research"],
   ["system", "System", "i-system"],
 ];

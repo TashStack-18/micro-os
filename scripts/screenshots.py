@@ -56,7 +56,8 @@ def main():
         # other through semaphores, and U-mode programs making system calls.
         # The U-mode programs run last so their output is what the terminal shows.
         # The background tasks keep running while the apps are photographed.
-        for cmd, pause in [("spin 90 &", 0.5), ("primes 40000000 &", 0.4), ("pingpong 900 120 &", 2.5),
+        # Ping-pong starts after the terminal shot so its output doesn't scroll the U-mode programs away.
+        for cmd, pause in [("spin 90 &", 0.5), ("primes 40000000 &", 0.4),
                            ("clear", 0.3), ("user hello 1", 1.6), ("user priv", 1.2), ("user badptr", 1.0)]:
             post(a.url, "/api/input", (cmd + "\r").encode())
             time.sleep(pause)
@@ -65,12 +66,33 @@ def main():
         print("03_desktop.png")
 
         for i, app in enumerate(APPS, start=4):
-            # One app at a time on a clear desktop, so the terrain behind it shows too.
+            if app == "topo":
+                # Two tasks waking each other through semaphores: the Kernel Map's arcs.
+                post(a.url, "/api/input", b"pingpong 900 120 &\r")
+                time.sleep(2.5)
+            # One app at a time on a clear desktop, so the wallpaper behind it shows too.
             page.evaluate("app => { showDesktop(); openApp(app); }", app)
             page.wait_for_timeout(1800)
             name = f"{i:02d}_{app}.png"
             page.screenshot(path=str(out / name))
             print(name)
+
+        # Control Center over two working windows, then Mission Control.
+        page.evaluate("() => { showDesktop(); openApp('terminal'); openApp('syscalls'); cc.open(); }")
+        page.wait_for_timeout(1200)
+        page.screenshot(path=str(out / "14_control_center.png"))
+        print("14_control_center.png")
+        page.evaluate("() => { cc.close(); openApp('processes'); openApp('research'); mission(true); }")
+        page.wait_for_timeout(1500)
+        page.screenshot(path=str(out / "15_mission_control.png"))
+        print("15_mission_control.png")
+
+        # The same desktop on a phone.
+        phone = browser.new_page(viewport={"width": 375, "height": 812}, is_mobile=True, has_touch=True, device_scale_factor=2)
+        phone.goto(a.url + "/#noboot", wait_until="domcontentloaded")
+        phone.wait_for_timeout(4000)
+        phone.screenshot(path=str(out / "16_phone.png"))
+        print("16_phone.png")
         browser.close()
     print(f"saved to {out}")
 

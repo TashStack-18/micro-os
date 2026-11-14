@@ -5,15 +5,19 @@ on an emulated RISC-V machine, runs real tasks with their own stacks, switches
 between them on a timer interrupt, synchronises them, allocates memory, lets
 programs run in unprivileged **user mode** behind real system calls, and
 reports what every mechanism did through structured traces that Python turns
-into tables and plots. On screen it appears as **NEXUS OS**, a browser desktop
-that drives the running kernel.
+into tables and plots.
 
-![NEXUS OS terminal: a U-mode program making system calls and a second one being killed for a privileged instruction](results/screenshots/04_terminal.png)
+On screen it is **NEXUS OS**: a desktop operating system in the browser, lit
+by the running kernel. Its wallpaper, widgets, menu bar and windows show the
+live machine, and every number on them comes from the kernel's trace.
 
-*Above: `user hello` runs in U-mode and reaches the kernel only through
-`ecall` (15 system calls); `user priv` tries to read a supervisor register and
-the kernel kills just that program; `user badptr` is refused with `-EFAULT`.
-Every pixel is live kernel output.*
+![NEXUS OS desktop: the wallpaper lit by the running tasks, live CPU, scheduler, memory and system-call widgets, and a notification that the kernel killed a U-mode program](results/screenshots/03_desktop.png)
+
+*Above: the wallpaper's coral and cyan lights are the two busiest tasks
+(`spin` and `primes`), sized by their real CPU share. The widgets show CPU use
+for the last 60 s, who got the CPU in each quarter-second, the 16 MiB heap in
+128 slices, and the latest system calls. The notification is the kernel
+killing `user priv` for a privileged instruction.*
 
 ## At a glance
 
@@ -29,22 +33,61 @@ Every pixel is live kernel output.*
 | Research | the R3 study *Fairness vs Throughput in CPU Scheduling* re-run on the kernel: 440 runs, H1–H3 supported |
 | Linux | same workloads on Linux 6.6 (EEVDF, SCHED_RR) for comparison |
 | Micro-OS Linux | a Debian 13 distribution built in 7 measured stages: LAN, Wi-Fi, laptop hardware, APT/aptitude, Snap Store |
+| Desktop | NEXUS OS: living wallpaper, widgets, menus, Control Center, Mission Control, Spotlight, 10 apps, phone layout |
+
+## The NEXUS OS desktop
+
+NEXUS is built like a real desktop operating system, but nothing on it is
+decoration: it is the kernel's own state, drawn.
+
+- **Living wallpaper.** Each running task is a soft field of light. The three
+  busiest tasks get coral, cyan and mint, and keep their colour while they
+  stay in the top three; every other task is a dim haze. A dispatch makes a
+  task's light flare, a killed program flashes rose, and the heap in use glows
+  along the horizon. With the kernel off, the sky is dark.
+- **Boot and lock screen.** The boot screen replays this boot's real trace with
+  timestamps. The lock screen shows the machine's identity and how many
+  milliseconds the kernel took to reach its shell.
+- **Menu bar.** The NEXUS menu, the focused app's own menu (Shell, File, Go,
+  Run or Tests), and Window, Kernel and Help menus, all keyboard-navigable.
+  In the middle, a capsule with the policy, quantum, tick count and number
+  of tasks; on the right, live CPU and heap meters.
+- **Widgets.** CPU over the last 60 s, a scheduler ribbon, a heap map and the
+  latest system calls, each opening its full app.
+- **Control Center.** Pick any of the 8 scheduling policies and a quantum, then
+  reboot the kernel with them; turn the living wallpaper or notifications
+  off; power the machine off or on.
+- **Mission Control, Spotlight and the dock.** See all windows at once (Ctrl+F3),
+  search apps and run shell commands (Ctrl+K), launch from a magnifying dock.
+  Windows move, resize, minimise and zoom, and the layout is remembered.
+- **Notifications.** Raised by real events: a program killed, a deadlock,
+  a kernel build, a finished test run, the machine powering off.
+- **Phone.** The same desktop works at phone width.
+
+What it does not pretend: the kernel has no file system, compiler or IPC
+messages. *Files* browses the project on the host, *Build & run* compiles on
+the host and reboots the kernel, and the Kernel Map's arcs are real semaphore
+wake-ups. Each of these is labelled as such on screen.
 
 ## Tour
 
 | | |
 |---|---|
 | ![Boot](results/screenshots/01_boot.png) | **Boot.** The boot screen replays this boot's real trace: hart entry, firmware, trap vector, heap, timer, scheduler, shell, each with its timestamp. |
-| ![Lock screen](results/screenshots/02_lock.png) | **Lock screen.** The machine as it boots up, before the desktop. |
-| ![Desktop](results/screenshots/03_desktop.png) | **Desktop.** Menu bar, dock and widgets, every number live from the kernel. |
-| ![Topography](results/screenshots/05_topo.png) | **Topography.** Each task is a peak whose height is its CPU share; the coral path is the scheduler's real dispatch order and the arcs are real semaphore wake-ups. |
-| ![System calls](results/screenshots/06_syscalls.png) | **System calls.** Live `ecall`s from U-mode programs, and the kernel stopping a program that breaks the rules. |
-| ![Processes](results/screenshots/07_processes.png) | **Processes.** Task table (state, priority, MLFQ level, CPU ticks, dispatches) and CPU share over the last 60 s. |
+| ![Lock screen](results/screenshots/02_lock.png) | **Lock screen.** The clock where the desktop's sits, the machine's identity and its measured boot time. |
+| ![Terminal](results/screenshots/04_terminal.png) | **Terminal.** The kernel's own shell over the serial port: `user hello` reaches the kernel only through `ecall`, `user priv` is killed for reading a supervisor register, `user badptr` is refused with `-EFAULT`. |
+| ![Kernel Map](results/screenshots/05_topo.png) | **Kernel Map.** Each task is a peak whose height is its CPU share; the path is the scheduler's real dispatch order and the arcs are real semaphore wake-ups. |
+| ![System calls](results/screenshots/06_syscalls.png) | **System calls.** Live `ecall`s from U-mode programs, what each returned, and the kernel stopping a program that breaks the rules. |
+| ![Processes](results/screenshots/07_processes.png) | **Processes.** Task table (state, priority, MLFQ level, CPU ticks, dispatches), CPU share over the last 60 s, and why tasks left the CPU. |
 | ![Memory](results/screenshots/08_memory.png) | **Memory.** A map of the 16 MiB heap in 128 slices from the kernel's `HEAPMAP` trace, with fragmentation and allocation counters. |
 | ![Journal](results/screenshots/09_journal.png) | **Journal.** Every spawn, exit, wake-up and policy event, as the kernel reported it. |
 | ![Code](results/screenshots/10_code.png) | **Code.** Edit a program in `kernel/src/programs/`; *Build & run* rebuilds the kernel on the host (labelled as such) and runs it. |
-| ![Research](results/screenshots/12_research.png) | **Research.** The R3 fairness-vs-throughput results measured on this kernel. |
-| ![System](results/screenshots/13_system.png) | **System.** Reboot under any of the 8 policies and quantum; machine facts from the kernel. |
+| ![Files](results/screenshots/11_files.png) | **Files.** The project's files on the host, opened in Code with one click; the kernel itself has no file system. |
+| ![Research](results/screenshots/12_research.png) | **Research.** The R3 fairness-vs-throughput results measured on this kernel, and the Micro-OS Linux boot times. |
+| ![System](results/screenshots/13_system.png) | **System.** Machine facts from the kernel, the 68-check test suite, and reboot under any policy and quantum. |
+| ![Control Center](results/screenshots/14_control_center.png) | **Control Center.** Scheduler, quantum and reboot, living wallpaper, do not disturb, Mission Control and power. |
+| ![Mission Control](results/screenshots/15_mission_control.png) | **Mission Control.** Every open window at once; click or press Enter to pick one. |
+| ![Phone](results/screenshots/16_phone.png) | **Phone.** The same live desktop at 375 px: widgets in one column, a two-row dock. |
 
 Regenerate these pictures from the live system: `scripts/screenshots.py` (see its header).
 

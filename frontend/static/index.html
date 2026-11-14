@@ -401,7 +401,7 @@
       <i class="win-grip" aria-hidden="true"></i>
     </section>
 
-    <!-- Topography -->
+    <!-- Kernel Map -->
     <section tabindex="-1" class="win" id="win-topo" data-app="topo" aria-label="Kernel Map" hidden>
       <header class="win-bar"><svg class="win-ic"><use href="#i-topo"/></svg><h2>Kernel Map</h2><span class="win-sub">live survey of the kernel</span>
         <span class="win-ctl"><button data-win="min" aria-label="Minimize Kernel Map"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Kernel Map"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Kernel Map"><svg><use href="#i-close"/></svg></button></span>
@@ -411,8 +411,8 @@
         <aside class="topo-side">
           <dl class="legend-list">
             <dt><i class="lg peak"></i>Peak</dt><dd>a task; height is its CPU share over the last 0.25 s, the ring is its state</dd>
-            <dt><i class="lg path"></i>Coral path</dt><dd>the scheduler's real dispatch order (DISPATCH trace)</dd>
-            <dt><i class="lg arc"></i>Celadon arc</dt><dd>a wake-up: one task released a semaphore or mutex another was blocked on</dd>
+            <dt><i class="lg path"></i>Dispatch path</dt><dd>the scheduler's real dispatch order (DISPATCH trace)</dd>
+            <dt><i class="lg arc"></i>Dashed arc</dt><dd>a wake-up: one task released a semaphore or mutex another was blocked on</dd>
             <dt><i class="lg tick"></i>Short tick</dt><dd>a sleep that ended on a timer tick</dd>
             <dt><i class="lg heap"></i>Heap ridge</dt><dd>how full each 1/128 of the 16 MiB heap is (HEAPMAP, once a second)</dd>
           </dl>
