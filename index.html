@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>NEXUS OS</title>
+  <link rel="preload" href="fonts/Onest.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/SplineSansMono.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="xterm.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="booting">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17z"/><path d="M7 10l2.5 2L7 14M12 14h5"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.5 7L4 12l4.5 5M15.5 7L20 12l-4.5 5M13.5 4.5l-3 15"/></symbol>
+  <symbol id="i-files" viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2h9v10h-17z"/><path d="M3.5 11h17"/></symbol>
+  <symbol id="i-processes" viewBox="0 0 24 24"><path d="M4 19.5V13M9.33 19.5V6M14.67 19.5V10M20 19.5V15.5M2.5 19.5h19"/></symbol>
+  <symbol id="i-memory" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17z"/><path d="M3.5 10h17M3.5 14.5h17M9 5.5v4.5M14 10v4.5M7 14.5v4"/></symbol>
+  <symbol id="i-journal" viewBox="0 0 24 24"><path d="M5 4.5v15M5 7h2M5 12h2M5 17h2M10 7h9.5M10 12h7M10 17h8.5"/></symbol>
+  <symbol id="i-topo" viewBox="0 0 24 24"><path d="M12 4.5c4.6 0 8 2.6 8 6.4 0 4.5-3.9 8.6-8.4 8.6C7 19.5 4 16.4 4 12.3 4 7.9 7.3 4.5 12 4.5z"/><path d="M12.2 8c2.6 0 4.4 1.5 4.4 3.6 0 2.5-2.2 4.6-4.6 4.6-2.6 0-4.2-1.7-4.2-4C7.8 9.7 9.6 8 12.2 8z"/><path d="M12.2 11.2c.9 0 1.4.4 1.4 1s-.6 1.2-1.4 1.2-1.3-.5-1.3-1.1.5-1.1 1.3-1.1z"/></symbol>
+  <symbol id="i-system" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><path d="M15 5v4M9 10v4M17 15v4"/></symbol>
+  <symbol id="i-syscall" viewBox="0 0 24 24"><path d="M3.5 12h17" stroke-dasharray="2 2"/><path d="M8 4.5v13M8 17.5l-2.5-2.5M8 17.5l2.5-2.5M16 19.5v-13M16 6.5l-2.5 2.5M16 6.5l2.5 2.5"/></symbol>
+  <symbol id="i-research" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7 16l4-5 3 3 5-7"/><path d="M7 16h.01M11 11h.01M14 14h.01M19 7h.01" stroke-width="3"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2H4.5z"/><path d="M10 20.5h4"/></symbol>
+  <symbol id="i-tour" viewBox="0 0 24 24"><path d="M5 20.5V4.5l12 5-12 5"/></symbol>
+  <symbol id="i-tile" viewBox="0 0 24 24"><path d="M4 4.5h7v7H4zM13 4.5h7v7h-7zM4 13.5h7v6H4zM13 13.5h7v6h-7z"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8"/><path d="M7 6.5a7 7 0 1 0 10 0"/></symbol>
+  <symbol id="i-reboot" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.4-5.5"/><path d="M19.5 4v4.5H15"/></symbol>
+  <symbol id="i-min" viewBox="0 0 16 16"><path d="M3.5 12h9"/></symbol>
+  <symbol id="i-max" viewBox="0 0 16 16"><path d="M3.5 3.5h9v9h-9z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M5 3.5l7 4.5-7 4.5z"/></symbol>
+  <symbol id="i-save" viewBox="0 0 16 16"><path d="M3 3h8l2 2v8H3z"/><path d="M5.5 3v3h4V3M5.5 13V9.5h5V13"/></symbol>
+  <symbol id="i-new" viewBox="0 0 16 16"><path d="M4 2.5h5l3 3v8H4z"/><path d="M8 7.5v4M6 9.5h4"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path d="M2 4h4l1.5 1.5H14V12.5H2z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 2h5l3 3v9H4z"/><path d="M9 2v3h3"/></symbol>
+  <symbol id="i-up" viewBox="0 0 16 16"><path d="M8 13V3.5M4 7.5l4-4 4 4"/></symbol>
+  <symbol id="nx-mark" viewBox="0 0 32 32" fill="none" stroke-width="1.6"><path style="stroke:var(--slate)" d="M16 3.5c7.6 0 12.5 4.6 12.5 11.1 0 7.4-6 13.9-13.5 13.9C7.5 28.5 3.5 23.2 3.5 16.6 3.5 9.2 8.7 3.5 16 3.5z"/><path style="stroke:var(--chalk)" d="M16.4 8.6c4.6 0 7.5 2.7 7.5 6.4 0 4.3-3.6 7.9-7.8 7.9-4.4 0-6.9-2.9-6.9-6.7 0-4.3 2.9-7.6 7.2-7.6z"/><path style="stroke:var(--coral);fill:var(--coral)" d="M16.6 13.2c1.9 0 3 1 3 2.4 0 1.7-1.4 3-3.1 3-1.8 0-2.8-1.1-2.8-2.6 0-1.6 1.2-2.8 2.9-2.8z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/></symbol>
+  <symbol id="i-control" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="5.5" rx="2.75"/><rect x="3.5" y="13.5" width="17" height="5.5" rx="2.75"/><circle cx="8" cy="7.75" r="1.6"/><circle cx="16" cy="16.25" r="1.6"/></symbol>
+  <symbol id="i-mission" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="7.5" height="6" rx="1.5"/><rect x="13" y="4.5" width="7.5" height="6" rx="1.5"/><rect x="3.5" y="13.5" width="7.5" height="6" rx="1.5"/><rect x="13" y="13.5" width="7.5" height="6" rx="1.5"/></symbol>
+  <symbol id="i-motion" viewBox="0 0 24 24"><path d="M3.5 15c3-6 6-6 8.5 0s5.5 6 8.5 0"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+</svg>
+
+<!-- ===================== boot: the kernel's real BOOT trace ===================== -->
+<section id="boot" class="boot" aria-label="Kernel boot" aria-live="polite">
+  <canvas id="boot-canvas" aria-hidden="true"></canvas>
+  <div class="boot-center">
+    <svg class="boot-mark" aria-hidden="true"><use href="#nx-mark"/></svg>
+    <h1 class="boot-word">NEXUS</h1>
+    <div class="boot-bar" aria-hidden="true"><i id="boot-fill"></i></div>
+    <p class="boot-now" id="boot-title">Starting the kernel</p>
+    <ol id="boot-rows" class="boot-rows"></ol>
+  </div>
+  <p class="boot-foot"><span id="boot-machine">Micro-OS kernel v0.1.0 · riscv64 · QEMU virt · 128 MiB</span> · <button id="boot-skip" class="link">Skip <kbd>Esc</kbd></button></p>
+</section>
+
+<!-- ===================== lock screen ===================== -->
+<section id="lock" class="lock" aria-label="Lock screen" hidden>
+  <div class="lock-time"><time id="lock-clock">--:--</time><span id="lock-date"></span></div>
+  <div class="lock-card">
+    <svg class="nx-mark big" aria-hidden="true"><use href="#nx-mark"/></svg>
+    <div class="lock-id">
+      <b>NEXUS</b>
+      <span id="lock-machine">Micro-OS kernel v0.1.0 · riscv64 · QEMU virt · 1 hart · 128 MiB</span>
+      <span id="lock-boot">the kernel is booting</span>
+    </div>
+    <button class="btn primary" id="lock-enter">Enter</button>
+  </div>
+  <span class="lock-hint">click or press any key</span>
+</section>
+
+<div class="app desktop">
+
+  <!-- ===================== menu bar ===================== -->
+  <header class="menubar">
+    <div class="mb-left">
+      <button id="launcher-btn" class="mb-mark" aria-haspopup="menu" aria-expanded="false" aria-controls="launcher" aria-label="NEXUS menu"><svg aria-hidden="true"><use href="#nx-mark"/></svg></button>
+      <b class="app-name" id="app-name">Desktop</b>
+      <nav class="mb-menus" id="mb-menus" aria-label="Menus"></nav>
+    </div>
+    <button class="capsule" id="capsule" aria-label="Kernel status, open Control Center">
+      <i class="cap-dot" id="machine-state"><b class="sr-only">Off</b></i>
+      <span id="k-policy">–</span>
+      <span class="cap-sep cap-x"></span>
+      <span class="cap-x"><b id="k-tick">–</b> ticks</span>
+      <span class="cap-sep cap-t"></span>
+      <span class="cap-t"><b id="k-tasks">–</b> tasks</span>
+      <span class="cap-sep wide"></span>
+      <span class="wide"><b id="k-events">–</b> ev/s</span>
+    </button>
+    <div class="mb-right">
+      <span class="mb-meter" title="CPU busy, from the kernel's idle ticks"><span>CPU</span><i class="bar"><i id="k-cpu-bar"></i></i><b id="k-cpu">–</b></span>
+      <span class="mb-meter heap" title="kernel heap in use"><span>Heap</span><i class="bar"><i id="k-heap-bar"></i></i><b id="k-heap">–</b></span>
+      <button class="mb-icon" id="spot-btn" aria-label="Search (Ctrl+K)"><svg><use href="#i-search"/></svg></button>
+      <button class="mb-icon" id="cc-btn" aria-label="Control Center" aria-expanded="false" aria-controls="cc"><svg><use href="#i-control"/></svg></button>
+      <button class="mb-icon bell" id="bell" aria-label="Notifications" aria-expanded="false" aria-controls="notif-center"><svg><use href="#i-bell"/></svg><b id="bell-count" hidden></b></button>
+      <span class="conn-wrap" title="Connection to the kernel"><i id="conn-dot" class="conn"></i><span class="sr-only">connection</span></span>
+      <time class="clock" id="clock">--:--</time>
+    </div>
+  </header>
+
+  <!-- Popovers live outside the menu bar so their glass blurs the desktop. -->
+    <section id="cc" class="menu-pop cc" aria-label="Control Center" hidden>
+      <div class="cc-tile cc-sched">
+        <h2>Scheduler</h2>
+        <div class="cc-policies" id="cc-policies" role="radiogroup" aria-label="Scheduling policy"></div>
+        <div class="cc-q"><span>Quantum</span><input type="range" id="cc-quantum" min="1" max="20" value="4" aria-label="Quantum in ticks"><b id="cc-qv">4</b></div>
+        <button class="btn primary wide" id="cc-reboot">Reboot with this scheduler</button>
+      </div>
+      <button class="cc-tile cc-toggle" id="cc-motion" aria-pressed="true"><svg><use href="#i-motion"/></svg><span><b>Living wallpaper</b><small>driven by kernel tasks</small></span></button>
+      <button class="cc-tile cc-toggle" id="cc-dnd" aria-pressed="false"><svg><use href="#i-moon"/></svg><span><b>Do not disturb</b><small>keep notifications quiet</small></span></button>
+      <button class="cc-tile cc-toggle" id="cc-mission"><svg><use href="#i-mission"/></svg><span><b>Mission Control</b><small>all windows at once</small></span></button>
+      <button class="cc-tile cc-toggle" id="cc-power"><svg><use href="#i-power"/></svg><span><b id="cc-power-label">Power off</b><small>the QEMU machine</small></span></button>
+    </section>
+    <div id="launcher" class="menu-pop launcher" role="menu" hidden>
+      <div class="launcher-head">
+        <svg class="nx-mark big" aria-hidden="true"><use href="#nx-mark"/></svg>
+        <div><b>NEXUS OS</b><span id="meta-machine">Micro-OS v0.1.0 · riscv64 · QEMU virt · 128 MiB</span></div>
+      </div>
+      <button role="menuitem" data-action="about"><svg><use href="#i-about"/></svg>About this computer</button>
+      <button role="menuitem" data-action="tour"><svg><use href="#i-tour"/></svg>Guided tour of the kernel</button>
+      <button role="menuitem" data-action="mission"><svg><use href="#i-mission"/></svg>Mission Control</button>
+      <button role="menuitem" data-action="reboot"><svg><use href="#i-reboot"/></svg>Reboot with a scheduler…</button>
+      <button role="menuitem" data-action="lock"><svg><use href="#i-moon"/></svg>Lock screen</button>
+      <button role="menuitem" data-action="poweroff" id="launcher-power"><svg><use href="#i-power"/></svg><span>Power off</span></button>
+    </div>
+
+  <div class="menu-pop mb-pop" id="mb-pop" role="menu" hidden></div>
+
+  <!-- ===================== desktop ===================== -->
+  <main class="workspace" id="workspace">
+    <canvas id="wallpaper" class="wallpaper" aria-hidden="true"></canvas>
+
+    <section class="desk-clock" aria-label="Clock">
+      <time id="desk-time">--:--</time>
+      <span id="desk-date"></span>
+      <span class="desk-up" id="desk-up">kernel not running</span>
+      <span class="desk-light" id="desk-light"></span>
+    </section>
+
+    <aside class="widgets" id="widgets" aria-label="Kernel widgets">
+      <section class="widget w-cpu" data-open="processes">
+        <header><h2>CPU</h2><b id="w-cpu">–</b></header>
+        <canvas id="w-cpu-chart" height="54"></canvas>
+        <p class="w-foot">last 60 s · busy share of the one hart</p>
+      </section>
+      <section class="widget w-ribbon" data-open="topo">
+        <header><h2>Scheduler</h2><span id="w-sched">–</span></header>
+        <canvas id="w-ribbon" height="40"></canvas>
+        <p class="w-foot" id="w-ribbon-key">who got the CPU, each quarter-second</p>
+      </section>
+      <section class="widget w-heap" data-open="memory">
+        <header><h2>Memory</h2><b id="w-heap">–</b></header>
+        <div class="w-dots" id="w-dots"></div>
+        <p class="w-foot" id="w-heap-foot">16 MiB kernel heap · 128 slices</p>
+      </section>
+      <section class="widget w-sys" data-open="syscalls">
+        <header><h2>System calls</h2><b id="w-sys">0 calls</b></header>
+        <p class="w-cols" aria-hidden="true"><span>pid</span><span>call</span><span>returned</span></p>
+        <ol id="w-sys-list"><li class="empty">none yet · try user hello</li></ol>
+      </section>
+    </aside>
+
+    <div class="terrain-key" id="terrain-key" hidden aria-hidden="true"></div>
+    <div class="ctxmenu menu-pop" id="ctxmenu" role="menu" hidden>
+      <button role="menuitem" data-ctx="terminal"><svg><use href="#i-terminal"/></svg>Open Terminal</button>
+      <button role="menuitem" data-ctx="mission"><svg><use href="#i-mission"/></svg>Mission Control</button>
+      <button role="menuitem" data-ctx="tile"><svg><use href="#i-tile"/></svg>Arrange windows</button>
+      <button role="menuitem" data-ctx="clear"><svg><use href="#i-min"/></svg>Show the desktop</button>
+      <button role="menuitem" data-ctx="tour"><svg><use href="#i-tour"/></svg>Guided tour</button>
+      <button role="menuitem" data-ctx="reboot"><svg><use href="#i-reboot"/></svg>Reboot with a scheduler…</button>
+    </div>
+    <section class="notif-center menu-pop" id="notif-center" aria-label="Notifications" hidden>
+      <header><h2>Notifications</h2><button class="link" id="notif-clear">Clear</button></header>
+      <ol id="notif-list"></ol>
+    </section>
+    <ol class="notifs" id="notifs" aria-live="polite"></ol>
+    <section class="tour" id="tour" aria-label="Guided tour" hidden>
+      <h2 id="tour-title"></h2>
+      <p id="tour-text"></p>
+      <p class="tour-cmd" id="tour-cmd" hidden></p>
+      <div class="tour-actions">
+        <span class="tour-step" id="tour-step"></span>
+        <button class="link" id="tour-end">End <kbd>Esc</kbd></button>
+        <button class="btn" id="tour-back">Back</button>
+        <button class="btn" id="tour-run" hidden></button>
+        <button class="btn primary" id="tour-next">Next</button>
+      </div>
+    </section>
+
+    <!-- Terminal -->
+    <section tabindex="-1" class="win" id="win-terminal" data-app="terminal" aria-label="Terminal" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-terminal"/></svg><h2>Terminal</h2><span class="win-sub">kernel shell · serial ttyS0</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Terminal"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Terminal"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Terminal"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="toolstrip">
+        <span class="sb-keys">
+          <button data-key="help"><kbd>F1</kbd>help</button>
+          <button data-key="sysinfo"><kbd>F2</kbd>sysinfo</button>
+          <button data-key="ps"><kbd>F3</kbd>ps</button>
+          <button data-key="mem"><kbd>F4</kbd>mem</button>
+        </span>
+        <span class="hint"><kbd>Ctrl</kbd>+<kbd>C</kbd> stops · <kbd>Shift</kbd>+<kbd>Tab</kbd> leaves</span>
+      </div>
+      <div class="win-body term-body"><div id="terminal"></div></div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Code -->
+    <section tabindex="-1" class="win" id="win-code" data-app="code" aria-label="Code" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-code"/></svg><h2>Code</h2><span class="win-sub" id="code-path">kernel/src/programs</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Code"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Code"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Code"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="toolstrip code-tools">
+        <label class="sr-only" for="code-prog">Program</label>
+        <select id="code-prog"></select>
+        <button class="tbtn" id="code-new"><svg><use href="#i-new"/></svg>New</button>
+        <button class="tbtn" id="code-save" disabled><svg><use href="#i-save"/></svg>Save</button>
+        <span class="grow"></span>
+        <label class="args"><span>run</span><input id="code-args" type="text" spellcheck="false" aria-label="Command to run after the build"></label>
+        <button class="btn primary" id="code-build"><svg><use href="#i-play"/></svg>Build &amp; run</button>
+      </div>
+      <div class="code-split">
+        <div class="editor" id="editor">
+          <pre class="gutter" id="ed-gutter" aria-hidden="true"></pre>
+          <div class="ed-scroll" id="ed-scroll">
+            <pre class="ed-hl" id="ed-hl" aria-hidden="true"></pre>
+            <textarea id="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Rust source"></textarea>
+          </div>
+        </div>
+        <div class="buildpane">
+          <div class="build-head"><b id="build-state">Not built in this session</b><span class="hint">cargo runs on the host (WSL); the kernel has no compiler. A good build reboots the VM and runs the program.</span></div>
+          <ul class="diags" id="diags"></ul>
+          <pre class="buildlog" id="buildlog"></pre>
+        </div>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Files -->
+    <section tabindex="-1" class="win" id="win-files" data-app="files" aria-label="Files" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-files"/></svg><h2>Files</h2><span class="win-sub">project files on the host · the kernel has no file system</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Files"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Files"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Files"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="toolstrip">
+        <button class="tbtn" id="files-up" aria-label="Up one folder"><svg><use href="#i-up"/></svg></button>
+        <nav class="crumbs" id="crumbs" aria-label="Folder path"></nav>
+      </div>
+      <div class="files-split">
+        <ul class="flist" id="flist" role="listbox" aria-label="Folder contents"></ul>
+        <div class="fpreview" id="fpreview"><p class="empty">Choose a file to read it here. Programs in <code>kernel/src/programs</code> open in Code.</p></div>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Processes -->
+    <section tabindex="-1" class="win" id="win-processes" data-app="processes" aria-label="Processes" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-processes"/></svg><h2>Processes</h2><span class="win-sub" id="sched-line"></span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Processes"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Processes"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Processes"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="win-body">
+        <div class="scroll-x">
+          <table class="table">
+            <thead><tr><th class="num">PID</th><th>Name</th><th>State</th><th class="num">Prio</th><th class="num">Lvl</th><th class="num">CPU ticks</th><th class="num">Dispatches</th><th class="num">Last 0.25 s</th><th>CPU share</th><th></th></tr></thead>
+            <tbody id="task-rows"></tbody>
+          </table>
+        </div>
+        <section class="block">
+          <div class="block-head"><h3>CPU share by task</h3><span class="hint">last 60 s</span></div>
+          <canvas id="cpu-chart" height="170"></canvas>
+          <div id="legend" class="legend"></div>
+        </section>
+        <section class="block">
+          <div class="block-head"><h3>Why tasks left the CPU</h3><span class="hint">last 0.25 s, from OFF trace</span></div>
+          <dl class="readout" id="off-reasons"></dl>
+        </section>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Memory -->
+    <section tabindex="-1" class="win" id="win-memory" data-app="memory" aria-label="Memory" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-memory"/></svg><h2>Memory</h2><span class="win-sub" id="heap-pct"></span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Memory"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Memory"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Memory"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="win-body">
+        <section class="block">
+          <div class="block-head"><h3>Heap map</h3><span class="hint" id="heapmap-hint">waiting for the kernel's HEAPMAP</span></div>
+          <div class="heapmap" id="heapmap" role="img" aria-label="Heap map"></div>
+          <div class="heapmap-scale"><span id="hm-start">start</span><span>each cell is one slice; brighter is fuller</span><span id="hm-end">end</span></div>
+        </section>
+        <div class="grid2">
+          <section class="block">
+            <div class="block-head"><h3>Kernel heap</h3><span class="hint">first-fit free list</span></div>
+            <dl id="heap-stats" class="readout"></dl>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>In use</h3><span class="hint">last 60 s</span></div>
+            <canvas id="heap-chart" height="150"></canvas>
+          </section>
+        </div>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Journal -->
+    <section tabindex="-1" class="win" id="win-journal" data-app="journal" aria-label="Journal" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-journal"/></svg><h2>Journal</h2><span class="win-sub" id="journal-count"></span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Journal"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Journal"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Journal"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="toolstrip chips" role="group" aria-label="Filter journal">
+        <button class="chip on" data-filter="all" aria-pressed="true">All</button>
+        <button class="chip" data-filter="task" aria-pressed="false">Tasks</button>
+        <button class="chip" data-filter="wake" aria-pressed="false">Wake-ups</button>
+        <button class="chip" data-filter="policy" aria-pressed="false">Scheduler</button>
+        <button class="chip" data-filter="panel" aria-pressed="false">Panel</button>
+      </div>
+      <ol class="journal" id="journal" aria-live="polite"></ol>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- System calls -->
+    <section tabindex="-1" class="win" id="win-syscalls" data-app="syscalls" aria-label="System calls" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-syscall"/></svg><h2>System calls</h2><span class="win-sub">U-mode programs reach the kernel only through ecall</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize System calls"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize System calls"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close System calls"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="toolstrip">
+        <span class="hint strip-label">Run in U-mode:</span>
+        <button class="tbtn" data-user="hello 3">hello</button>
+        <button class="tbtn" data-user="priv">priv</button>
+        <button class="tbtn" data-user="badptr">badptr</button>
+        <button class="tbtn" data-user="unknown">unknown</button>
+        <button class="tbtn" data-user="spin 3 &amp;">spin</button>
+      </div>
+      <div class="win-body">
+        <section class="block boundary" aria-label="How a system call crosses into the kernel">
+          <div class="lane"><b>U-mode</b><span>program sets a7 = number, a0.. = args, runs <code>ecall</code></span></div>
+          <div class="lane mid"><b>trap</b><span>trap.S switches to the kernel stack and saves the registers</span></div>
+          <div class="lane"><b>S-mode</b><span>the kernel checks the arguments, does the work, puts the result in a0, <code>sret</code></span></div>
+          <p class="hint">Privileged instructions in U-mode fault, and the kernel ends only that program. Paging is off: this is privilege separation, not memory isolation.</p>
+        </section>
+        <div class="grid2">
+          <section class="block">
+            <div class="block-head"><h3>Calls by name</h3><span class="hint" id="sys-total">since this page opened</span></div>
+            <dl class="readout" id="sys-counts"></dl>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>User programs</h3><span class="hint">this boot</span></div>
+            <ul class="uprocs" id="uprocs"><li class="empty">No program has entered U-mode yet. Run one above.</li></ul>
+          </section>
+        </div>
+        <section class="block">
+          <div class="block-head"><h3>Live calls</h3><span class="hint">from the kernel's SYSCALL trace</span></div>
+          <div class="scroll-x">
+            <table class="table">
+              <thead><tr><th class="num">t (s)</th><th class="num">PID</th><th>Call</th><th class="num">a7</th><th class="num">Returned</th><th>Meaning</th></tr></thead>
+              <tbody id="sys-rows"><tr class="empty-row"><td colspan="6">Waiting for a system call.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Research -->
+    <section tabindex="-1" class="win" id="win-research" data-app="research" aria-label="Research" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-research"/></svg><h2>Research</h2><span class="win-sub">measured results from this project</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Research"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Research"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Research"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="tabs" role="tablist" aria-label="Research sections">
+        <button role="tab" class="tab rtab" aria-selected="true" aria-controls="res-r3" id="rtab-r3">R3 on the kernel</button>
+        <button role="tab" class="tab rtab" aria-selected="false" aria-controls="res-distro" id="rtab-distro">Micro-OS Linux boot times</button>
+      </div>
+      <div class="win-body">
+        <div role="tabpanel" id="res-r3" aria-labelledby="rtab-r3">
+          <section class="block">
+            <div class="block-head"><h3>Hypotheses</h3><span class="hint">simulator vs this kernel, 10 seeds</span></div>
+            <div class="hyps" id="hyps"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>Overload, bimodal workload (ρ = 1.1)</h3><span class="hint">results/research_sync.md</span></div>
+            <div class="scroll-x"><table class="table" id="r3-table"></table></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>Figures</h3><span class="hint">click to enlarge</span></div>
+            <div class="plots" id="r3-figs"></div>
+          </section>
+        </div>
+        <div role="tabpanel" id="res-distro" aria-labelledby="rtab-distro" hidden>
+          <section class="block">
+            <div class="block-head"><h3>Boot time after each component</h3><span class="hint">systemd-analyze, mean of 5 boots, KVM VM</span></div>
+            <div class="strata" id="strata"></div>
+            <p class="hint">A separate Debian-based system built one component at a time; the Rust kernel above does not run Linux software.</p>
+          </section>
+        </div>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- Kernel Map -->
+    <section tabindex="-1" class="win" id="win-topo" data-app="topo" aria-label="Kernel Map" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-topo"/></svg><h2>Kernel Map</h2><span class="win-sub">live survey of the kernel</span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize Kernel Map"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize Kernel Map"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close Kernel Map"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="topo-split">
+        <div class="topo-stage"><canvas id="topo-canvas"></canvas></div>
+        <aside class="topo-side">
+          <dl class="legend-list">
+            <dt><i class="lg peak"></i>Peak</dt><dd>a task; height is its CPU share over the last 0.25 s, the ring is its state</dd>
+            <dt><i class="lg path"></i>Dispatch path</dt><dd>the scheduler's real dispatch order (DISPATCH trace)</dd>
+            <dt><i class="lg arc"></i>Dashed arc</dt><dd>a wake-up: one task released a semaphore or mutex another was blocked on</dd>
+            <dt><i class="lg tick"></i>Short tick</dt><dd>a sleep that ended on a timer tick</dd>
+            <dt><i class="lg heap"></i>Heap ridge</dt><dd>how full each 1/128 of the 16 MiB heap is (HEAPMAP, once a second)</dd>
+          </dl>
+          <p class="hint">The kernel has no message-passing IPC; wake-ups are its real task-to-task hand-offs.</p>
+          <dl class="readout" id="topo-rates"></dl>
+        </aside>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+
+    <!-- System -->
+    <section tabindex="-1" class="win" id="win-system" data-app="system" aria-label="System" hidden>
+      <header class="win-bar"><svg class="win-ic"><use href="#i-system"/></svg><h2>System</h2><span class="win-sub" id="power-state"></span>
+        <span class="win-ctl"><button data-win="min" aria-label="Minimize System"><svg><use href="#i-min"/></svg></button><button data-win="max" aria-label="Maximize System"><svg><use href="#i-max"/></svg></button><button data-win="close" aria-label="Close System"><svg><use href="#i-close"/></svg></button></span>
+      </header>
+      <div class="tabs" role="tablist" aria-label="System sections">
+        <button role="tab" class="tab" aria-selected="true" aria-controls="sys-machine" id="tab-machine">Machine</button>
+        <button role="tab" class="tab" aria-selected="false" aria-controls="sys-tests" id="tab-tests">Tests</button>
+        <button role="tab" class="tab" aria-selected="false" aria-controls="sys-about" id="tab-about">About</button>
+      </div>
+      <div class="win-body">
+        <div role="tabpanel" id="sys-machine" aria-labelledby="tab-machine">
+          <div class="grid2">
+            <section class="block">
+              <div class="block-head"><h3>Reboot with a scheduler</h3></div>
+              <div class="form">
+                <label>Policy
+                  <select id="policy">
+                    <option value="rr">Round Robin</option>
+                    <option value="prio">Priority (preemptive)</option>
+                    <option value="aging">Priority + aging</option>
+                    <option value="mlfq">Multi-level feedback queue</option>
+                    <option value="fcfs">FCFS (R3)</option>
+                    <option value="sjf">SJF, predicted bursts (R3)</option>
+                    <option value="srtf">SRTF, predicted bursts (R3)</option>
+                    <option value="hrrn">HRRN, predicted bursts (R3)</option>
+                  </select>
+                </label>
+                <label>Quantum (ticks)<input id="quantum" type="number" min="1" max="50" value="4"></label>
+                <div class="row">
+                  <button id="reboot" class="btn primary">Reboot</button>
+                  <button id="poweroff" class="btn">Power off</button>
+                </div>
+              </div>
+            </section>
+            <section class="block">
+              <div class="block-head"><h3>Scheduler counters</h3><span class="hint" id="sched-policy"></span></div>
+              <dl id="sched-stats" class="readout"></dl>
+            </section>
+          </div>
+          <section class="block">
+            <div class="block-head"><h3>Context switches per second</h3><span class="hint">last 60 s</span></div>
+            <canvas id="switch-chart" height="150"></canvas>
+          </section>
+        </div>
+        <div role="tabpanel" id="sys-tests" aria-labelledby="tab-tests" hidden>
+          <section class="block">
+            <div class="block-head"><h3>Test suite</h3><button id="run-tests" class="btn primary">Run all tests</button></div>
+            <p class="hint">Host unit tests, the in-kernel checks (TC1–TC6 and mechanism demos), cross-boot repeatability, the shell smoke test and the plots. About a minute, in a separate QEMU.</p>
+            <pre id="test-log" class="buildlog tall">No run yet in this session.</pre>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>Checks</h3><span class="hint" id="check-summary"></span></div>
+            <div id="checks" class="checks"></div>
+          </section>
+          <section class="block">
+            <div class="block-head"><h3>Plots</h3><span class="hint">click to enlarge</span></div>
+            <div id="plots" class="plots"></div>
+          </section>
+        </div>
+        <div role="tabpanel" id="sys-about" aria-labelledby="tab-about" hidden>
+          <div class="about-head"><svg class="nx-mark huge" aria-hidden="true"><use href="#nx-mark"/></svg><div><h3 class="about-title">NEXUS OS</h3><p class="hint" id="about-machine"></p></div></div>
+          <p class="prose">NEXUS is the desktop of <b>Micro-OS</b>, an educational operating-system kernel written in Rust for the CA-6 Operating Systems project. The kernel boots on an emulated RISC-V computer (QEMU <code>virt</code>, OpenSBI firmware) inside WSL; this desktop runs in your browser and draws only what the kernel reports.</p>
+          <dl class="readout layers">
+            <dt>Kernel</dt><dd>monolithic, supervisor mode, one hart; not a microkernel</dd>
+            <dt>Boot</dt><dd>entry.S → kmain, command line from the device tree</dd>
+            <dt>Traps and timer</dt><dd>trap.S saves registers; 1 ms SBI timer drives preemption</dd>
+            <dt>Tasks</dt><dd>task control blocks, 16 KiB stacks with overflow canaries, up to 512 tasks</dd>
+            <dt>Scheduler</dt><dd>RR, Priority, Priority + aging, MLFQ, FCFS, SJF, SRTF, HRRN</dd>
+            <dt>Synchronization</dt><dd>IRQ spinlock, spinlock, blocking mutex, semaphore, deadlock detection; no message-passing IPC</dd>
+            <dt>Memory</dt><dd>16 MiB first-fit free-list heap; bump and best-fit for comparison</dd>
+            <dt>Storage</dt><dd>none: no file system; Files shows the project on the host</dd>
+            <dt>Programs</dt><dd>linked into the kernel; Code rebuilds the kernel on the host with cargo</dd>
+          </dl>
+        </div>
+      </div>
+      <i class="win-grip" aria-hidden="true"></i>
+    </section>
+  </main>
+
+  <!-- ===================== dock ===================== -->
+  <nav class="dock" aria-label="Applications"><div class="dock-inner" id="dock"></div></nav>
+</div>
+
+<!-- Spotlight -->
+<section class="spotlight" id="spotlight" aria-label="Search" hidden>
+  <div class="spot-box">
+    <svg aria-hidden="true"><use href="#i-search"/></svg>
+    <input id="launcher-q" type="text" placeholder="Search apps, or type a shell command" spellcheck="false" autocomplete="off" aria-label="Search apps or type a shell command">
+  </div>
+  <div class="spot-hits" id="launcher-hits"></div>
+  <p class="spot-foot"><kbd>Enter</kbd> open · <kbd>Esc</kbd> close · programs run in the kernel shell</p>
+</section>
+
+<div id="lightbox" class="lightbox" hidden></div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="nx-dialog" class="nx-dialog" aria-labelledby="dlg-title">
+  <form method="dialog">
+    <h2 id="dlg-title"></h2>
+    <p id="dlg-body"></p>
+    <label class="dlg-field" id="dlg-field" hidden><span id="dlg-label"></span><input id="dlg-input" type="text" spellcheck="false" autocomplete="off"></label>
+    <div class="dlg-actions">
+      <button value="ok" class="btn primary" id="dlg-ok">OK</button>
+      <button value="cancel" class="btn" id="dlg-cancel" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- xterm.js 5.5.0 and addon-fit 0.10.0, served locally so the desktop works offline -->
+<script src="xterm.min.js"></script>
+<script src="addon-fit.min.js"></script>
+<script src="terrain.js"></script>
+<script src="aurora.js"></script>
+<script src="replay.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
