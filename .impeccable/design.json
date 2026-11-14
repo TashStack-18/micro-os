@@ -1,126 +1,647 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-12T00:00:00Z",
-  "title": "Design System: ASTRA",
+  "generatedAt": "2026-11-14T00:00:00Z",
+  "title": "Design System: NEXUS OS",
   "extensions": {
     "colorMeta": {
-      "ground":   { "role": "neutral",   "displayName": "Olive-Black Ground", "canonical": "oklch(26.1% 0.011 115)", "tonalRamp": ["#0b0b0a", "#252522", "#42433e", "#61625c", "#82837c", "#a5a6a0", "#c9cac5", "#eeefec"] },
-      "ground-2": { "role": "neutral",   "displayName": "Well", "canonical": "oklch(23.2% 0.009 116)", "tonalRamp": ["#0b0b0a", "#252523", "#42423e", "#61625c", "#82837d", "#a5a6a1", "#c9c9c6", "#eeefec"] },
-      "raise":    { "role": "neutral",   "displayName": "Raise (hover)", "canonical": "oklch(28.6% 0.012 114)", "tonalRamp": ["#0b0b09", "#252522", "#42433d", "#61625b", "#82837b", "#a5a69f", "#c9cac5", "#eeefec"] },
-      "line":     { "role": "neutral",   "displayName": "Hairline", "canonical": "oklch(36.1% 0.010 115)", "tonalRamp": ["#0b0b0a", "#252522", "#42423e", "#61625c", "#82837d", "#a5a6a0", "#c9c9c5", "#eeefec"] },
-      "line-2":   { "role": "neutral",   "displayName": "Hairline Strong", "canonical": "oklch(41.3% 0.013 113)", "tonalRamp": ["#0b0b09", "#252521", "#42433d", "#61625a", "#82837b", "#a5a69f", "#c9cac4", "#eeefec"] },
-      "cream":    { "role": "neutral",   "displayName": "Cream", "canonical": "oklch(91.0% 0.026 90)", "tonalRamp": ["#0d0b07", "#28251d", "#464236", "#666152", "#888272", "#aaa597", "#cdc9bf", "#f1eee8"] },
-      "cream-2":  { "role": "neutral",   "displayName": "Cream Dim", "canonical": "oklch(81.7% 0.027 92)", "tonalRamp": ["#0c0b07", "#28251d", "#464236", "#666152", "#878272", "#a9a597", "#ccc9bf", "#f0eee8"] },
-      "muted":    { "role": "neutral",   "displayName": "Muted (6.2:1)", "canonical": "oklch(71.9% 0.026 99)", "tonalRamp": ["#0c0b07", "#27251d", "#444237", "#646253", "#868373", "#a8a598", "#cbc9bf", "#f0efe8"] },
-      "pending":  { "role": "neutral",   "displayName": "Pending (4.9:1)", "canonical": "oklch(65.5% 0.022 98)", "tonalRamp": ["#0c0b08", "#27251f", "#444238", "#646255", "#858375", "#a8a59a", "#cbc9c1", "#f0efe9"] },
-      "faint":    { "role": "neutral",   "displayName": "Faint (decorative only)", "canonical": "oklch(53.2% 0.017 103)", "tonalRamp": ["#0b0b09", "#262520", "#43423b", "#636258", "#848378", "#a6a59d", "#cac9c3", "#efefeb"] },
-      "red":      { "role": "primary",   "displayName": "Signal Red", "canonical": "oklch(55.0% 0.148 32)", "tonalRamp": ["#1b0301", "#451108", "#712518", "#a03c2b", "#c65f4c", "#e18a79", "#fab6a8", "#ffe4db"] },
-      "red-ink":  { "role": "primary",   "displayName": "Red Ink (small text, 4.8:1)", "canonical": "oklch(67.1% 0.136 34)", "tonalRamp": ["#1a0402", "#42130a", "#6e291a", "#9b412e", "#c1634f", "#dd8d7b", "#f6b8a9", "#ffe5dc"] },
-      "red-btn":  { "role": "primary",   "displayName": "Button Red", "canonical": "oklch(50.4% 0.135 32)", "tonalRamp": ["#1a0402", "#42130c", "#6e291d", "#9b4131", "#c16352", "#dd8d7d", "#f6b8ab", "#ffe5dc"] },
-      "gold":     { "role": "secondary", "displayName": "Instrument Gold", "canonical": "oklch(68.6% 0.103 83)", "tonalRamp": ["#120900", "#322200", "#563d02", "#7b5b12", "#9e7d3a", "#bda16d", "#dbc6a0", "#faedd6"] },
-      "olive":    { "role": "tertiary",  "displayName": "Olive Lamp", "canonical": "oklch(72.3% 0.093 119)", "tonalRamp": ["#0a0d01", "#222808", "#3e4718", "#5c682c", "#7d8a4d", "#a0ac7a", "#c5cea9", "#ecf2db"] }
+      "ink": {
+        "role": "neutral",
+        "displayName": "Twilight Ink",
+        "tonalRamp": [
+          "#080b15",
+          "#090c16",
+          "#090c18",
+          "#0a0d19",
+          "#0a0e1a",
+          "#54565f",
+          "#919398",
+          "#cecfd1"
+        ]
+      },
+      "ground-mid": {
+        "role": "neutral",
+        "displayName": "Dusk",
+        "tonalRamp": [
+          "#090c18",
+          "#0a0e1c",
+          "#0c0f20",
+          "#0d1124",
+          "#0e1328",
+          "#565a68",
+          "#93959e",
+          "#cfd0d4"
+        ]
+      },
+      "ground-deep": {
+        "role": "neutral",
+        "displayName": "Deep Twilight",
+        "tonalRamp": [
+          "#0b0e1b",
+          "#0d1021",
+          "#0f1428",
+          "#12172e",
+          "#141a35",
+          "#5a5f72",
+          "#9598a4",
+          "#d0d1d7"
+        ]
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk",
+        "tonalRamp": [
+          "#3b3d48",
+          "#646672",
+          "#9294a1",
+          "#c0c2d0",
+          "#eef0ff",
+          "#f3f4ff",
+          "#f7f8ff",
+          "#fcfcff"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "tonalRamp": [
+          "#2a2d3c",
+          "#464a5c",
+          "#656b81",
+          "#848ba5",
+          "#a3abc9",
+          "#bfc4d9",
+          "#d6d9e7",
+          "#edeef4"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Electric Periwinkle",
+        "tonalRamp": [
+          "#252a48",
+          "#3c4472",
+          "#5762a1",
+          "#717fd0",
+          "#8b9cff",
+          "#aebaff",
+          "#cbd2ff",
+          "#e8ebff"
+        ]
+      },
+      "accent-hi": {
+        "role": "primary",
+        "displayName": "Periwinkle Light",
+        "tonalRamp": [
+          "#2a2f48",
+          "#464d72",
+          "#656ea1",
+          "#8490d0",
+          "#a3b1ff",
+          "#bfc8ff",
+          "#d6dcff",
+          "#edefff"
+        ]
+      },
+      "coral": {
+        "role": "secondary",
+        "displayName": "Running Coral / Lead Coral",
+        "tonalRamp": [
+          "#3e2626",
+          "#6b3d34",
+          "#9c5745",
+          "#ce7055",
+          "#ff8a65",
+          "#ffad93",
+          "#ffcaba",
+          "#ffe8e0"
+        ]
+      },
+      "mint": {
+        "role": "secondary",
+        "displayName": "Ready Mint / Lead Mint",
+        "tonalRamp": [
+          "#1e3b38",
+          "#316255",
+          "#458f76",
+          "#5abb96",
+          "#6ee7b7",
+          "#9aeecd",
+          "#bef4df",
+          "#e2faf1"
+        ],
+        "note": "CSS variable is still named --celadon; value and role are mint."
+      },
+      "amber": {
+        "role": "secondary",
+        "displayName": "Waiting Amber",
+        "tonalRamp": [
+          "#3e3327",
+          "#6b5437",
+          "#9c7a48",
+          "#ce9f5a",
+          "#ffc46b",
+          "#ffd697",
+          "#ffe4bc",
+          "#fff3e1"
+        ]
+      },
+      "rose": {
+        "role": "secondary",
+        "displayName": "Kill Rose",
+        "tonalRamp": [
+          "#3e1f2e",
+          "#6b3144",
+          "#9c445b",
+          "#ce5873",
+          "#ff6b8b",
+          "#ff97ae",
+          "#ffbccb",
+          "#ffe1e8"
+        ]
+      },
+      "cyan": {
+        "role": "tertiary",
+        "displayName": "Lead Cyan",
+        "tonalRamp": [
+          "#1b3645",
+          "#2a5a6d",
+          "#3c839a",
+          "#4dabc6",
+          "#5ed3f3",
+          "#8ee0f7",
+          "#b7ebfa",
+          "#dff6fd"
+        ]
+      },
+      "violet": {
+        "role": "tertiary",
+        "displayName": "Quiet Violet",
+        "tonalRamp": [
+          "#2b2647",
+          "#483e70",
+          "#67579e",
+          "#8771cc",
+          "#a78bfa",
+          "#c1aefc",
+          "#d7cbfd",
+          "#ede8fe"
+        ]
+      },
+      "pink": {
+        "role": "tertiary",
+        "displayName": "Quiet Pink",
+        "tonalRamp": [
+          "#3c2138",
+          "#663455",
+          "#964875",
+          "#c55d96",
+          "#f472b6",
+          "#f79ccc",
+          "#fac0de",
+          "#fde3f0"
+        ]
+      },
+      "sky": {
+        "role": "tertiary",
+        "displayName": "Quiet Sky",
+        "tonalRamp": [
+          "#222d48",
+          "#374a72",
+          "#4e6aa1",
+          "#668ad0",
+          "#7daaff",
+          "#a4c4ff",
+          "#c4d9ff",
+          "#e5eeff"
+        ]
+      },
+      "lime": {
+        "role": "tertiary",
+        "displayName": "Quiet Lime",
+        "tonalRamp": [
+          "#303a2a",
+          "#51623c",
+          "#758e50",
+          "#9aba64",
+          "#bee678",
+          "#d2eea0",
+          "#e2f4c2",
+          "#f2fae4"
+        ]
+      },
+      "glass": {
+        "role": "neutral",
+        "displayName": "Window Glass"
+      },
+      "glass-focused": {
+        "role": "neutral",
+        "displayName": "Focused Glass"
+      },
+      "glass-menu": {
+        "role": "neutral",
+        "displayName": "Menu Glass"
+      },
+      "glass-widget": {
+        "role": "neutral",
+        "displayName": "Widget Glass"
+      },
+      "glass-dock": {
+        "role": "neutral",
+        "displayName": "Dock Glass"
+      },
+      "glass-bar": {
+        "role": "neutral",
+        "displayName": "Bar Glass"
+      },
+      "glass-light": {
+        "role": "neutral",
+        "displayName": "Light Glass"
+      },
+      "well": {
+        "role": "neutral",
+        "displayName": "Well"
+      },
+      "raise": {
+        "role": "neutral",
+        "displayName": "Raise"
+      },
+      "raise-hover": {
+        "role": "neutral",
+        "displayName": "Raise Hover"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule"
+      },
+      "rule-2": {
+        "role": "neutral",
+        "displayName": "Rule Strong"
+      },
+      "chalk-2": {
+        "role": "neutral",
+        "displayName": "Chalk Soft"
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "On-Accent Ink"
+      },
+      "coral-hi": {
+        "role": "secondary",
+        "displayName": "Coral Light"
+      },
+      "task-dim": {
+        "role": "tertiary",
+        "displayName": "Dim Task"
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Wordmark", "purpose": "Boot-screen ASTRA wordmark only." },
-      "headline": { "displayName": "Headline", "purpose": "About title." },
-      "title": { "displayName": "Brand", "purpose": "Header brand name beside the mark." },
-      "body": { "displayName": "Body", "purpose": "Prose (max 68ch) and task names; tabular figures." },
-      "data": { "displayName": "Data", "purpose": "Every kernel-reported value: readouts, tables, boot rows." },
-      "section-label": { "displayName": "Section label", "purpose": "Uppercase cream mono block headers." },
-      "label": { "displayName": "Label", "purpose": "Uppercase muted mono keys, table heads, form labels." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Desktop and lock-screen clock only (72px / 84px on phones)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Spotlight query."
+      },
+      "date": {
+        "displayName": "Date",
+        "purpose": "Date under the clock."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Block headings inside windows."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Window titles, menu-bar app name, widget and Control Center headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, menu items, table names; prose capped at 68ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Hints, subtitles, captions in Slate."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Each widget's headline kernel number."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Tables, readouts, editor."
+      },
+      "data-small": {
+        "displayName": "Data Small",
+        "purpose": "Status capsule, menu-bar meters, uptime, policy buttons, shortcuts."
+      }
     },
-    "shadows": [],
+    "shadows": [
+      {
+        "name": "pane",
+        "value": "0 30px 70px -24px rgba(0,0,0,.6), 0 12px 28px -12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07)",
+        "purpose": "Windows, menus, lock card, notifications, toast, dialogs (--shadow)."
+      },
+      {
+        "name": "pane-focused",
+        "value": "0 40px 90px -28px rgba(0,0,0,.7), 0 14px 32px -14px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1)",
+        "purpose": "The focused window."
+      },
+      {
+        "name": "widget",
+        "value": "0 18px 40px -22px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06)",
+        "purpose": "Desktop widgets."
+      },
+      {
+        "name": "dock",
+        "value": "0 20px 50px -20px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08)",
+        "purpose": "The dock."
+      },
+      {
+        "name": "dock-tile",
+        "value": "inset 0 1px 0 rgba(255,255,255,.14), 0 8px 16px -8px rgba(0,0,0,.6)",
+        "purpose": "Each dock tile."
+      },
+      {
+        "name": "spotlight",
+        "value": "0 40px 100px -30px rgba(0,0,0,.8)",
+        "purpose": "Spotlight, the deepest float."
+      },
+      {
+        "name": "mission-hover",
+        "value": "0 0 0 3px #8b9cff, (pane)",
+        "purpose": "The window under the pointer in Mission Control."
+      }
+    ],
+    "glass": [
+      {
+        "name": "lock-scrim",
+        "value": "blur(22px) saturate(140%)"
+      },
+      {
+        "name": "widget",
+        "value": "blur(26px) saturate(160%)"
+      },
+      {
+        "name": "glass",
+        "value": "blur(28px) saturate(160%)"
+      },
+      {
+        "name": "window",
+        "value": "blur(30px) saturate(160%)"
+      },
+      {
+        "name": "bar-dock-notification",
+        "value": "blur(30px) saturate(170%)"
+      },
+      {
+        "name": "menu",
+        "value": "blur(32px) saturate(170%)"
+      },
+      {
+        "name": "spotlight",
+        "value": "blur(40px) saturate(180%)"
+      },
+      {
+        "name": "mission-scrim",
+        "value": "blur(6px) over rgba(4, 6, 14, .45)"
+      }
+    ],
     "motion": [
-      { "name": "ease", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Boot dissolve (.5s opacity + 6px blur), track fills (.4s), boot row color (.3s)." },
-      { "name": "hover", "value": "0.15s", "purpose": "Color and background on nav and buttons." },
-      { "name": "reduced-motion", "value": "transition-duration: 0s", "purpose": "All transitions instant under prefers-reduced-motion." }
+      {
+        "name": "settle",
+        "value": "cubic-bezier(.22, 1, .36, 1)",
+        "purpose": "The interface easing (--settle, --ease): ease-out, no overshoot."
+      },
+      {
+        "name": "window-open",
+        "value": "320ms settle; from opacity 0, translateY(14px) scale(.965)",
+        "purpose": "A window opens."
+      },
+      {
+        "name": "pop",
+        "value": "200ms settle (Spotlight 220ms); from opacity 0, translateY(-6px) scale(.98)",
+        "purpose": "Menus, Control Center, Spotlight."
+      },
+      {
+        "name": "mission",
+        "value": "450ms settle on transform",
+        "purpose": "Windows spreading into Mission Control."
+      },
+      {
+        "name": "widget-lift",
+        "value": "250ms settle, translateY(-2px)",
+        "purpose": "Widget hover."
+      },
+      {
+        "name": "dock-magnify",
+        "value": "180ms settle, up to scale(1.42) within 140px of the pointer",
+        "purpose": "Dock magnification."
+      },
+      {
+        "name": "lock-out",
+        "value": "550ms settle; to opacity 0, translateY(-3%), blur(6px)",
+        "purpose": "Unlock."
+      },
+      {
+        "name": "notif-in",
+        "value": "320ms settle; from opacity 0, translateX(14px)",
+        "purpose": "A notification arrives."
+      },
+      {
+        "name": "breathe",
+        "value": "2.4s ease-in-out infinite, opacity to .55",
+        "purpose": "The capsule's live dot; the only loop."
+      },
+      {
+        "name": "aurora",
+        "value": "12 fps at 1/8 resolution; fields approach target by 1 - e^(-1.6 dt); flare decays e^(-2.5 dt); slow sinusoidal drift; kill ring 1.8 s",
+        "purpose": "The living wallpaper."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "transitions 0s, animations none; aurora drift off and fields jump to target; dock magnification off; lock leaves at once",
+        "purpose": "prefers-reduced-motion: reduce. The Control Center 'Living wallpaper' toggle also stops the drift, and the choice persists."
+      }
     ],
     "breakpoints": [
-      { "name": "narrow", "value": "820px", "purpose": "One column, nav as horizontal strip, terminal 12px." },
-      { "name": "medium", "value": "1180px", "purpose": "Rail drops under main as a 3-column strip; nav 168px." },
-      { "name": "projector", "value": "1280px", "purpose": "min-width: terminal type 16px (14px between)." }
+      {
+        "name": "capsule-compact",
+        "value": "1600px"
+      },
+      {
+        "name": "capsule-minimal",
+        "value": "1280px"
+      },
+      {
+        "name": "phone",
+        "value": "820px"
+      }
     ],
-    "terminalTheme": {
-      "background": "transparent", "foreground": "#e8e1ce", "cursor": "#d4644d", "cursorAccent": "#1d1e19", "selectionBackground": "#5a3a30",
-      "black": "#2a2b24", "brightBlack": "#8a8778", "red": "#d4644d", "brightRed": "#e07a62",
-      "green": "#9fae6a", "brightGreen": "#b5c482", "yellow": "#c9a45a", "brightYellow": "#d9b872",
-      "blue": "#8fa3a6", "brightBlue": "#a6babd", "magenta": "#c08a7a", "brightMagenta": "#d4a090",
-      "cyan": "#8fae9f", "brightCyan": "#a6c4b5", "white": "#e8e1ce", "brightWhite": "#f4efe2"
+    "taskColors": {
+      "lead": [
+        "#ff8a65",
+        "#5ed3f3",
+        "#6ee7b7"
+      ],
+      "other": [
+        "#ffc46b",
+        "#a78bfa",
+        "#f472b6",
+        "#7daaff",
+        "#bee678"
+      ],
+      "rule": "The top three tasks above 2% CPU share hold lead slots and keep them while they stay in the top three. Other tasks take a quiet hue by id in charts and dim white in the ribbon. Lead aurora alpha reaches .62; other tasks stay at or below .14."
     }
   },
   "components": [
     {
-      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
-      "description": "Committing action (apply scheduler, boot, run).",
-      "html": "<button class=\"ds-btn ds-btn-primary\">Apply</button>",
-      "css": ".ds-btn { border: 1px solid var(--line-2); background: transparent; color: var(--cream); cursor: pointer; padding: 10px 16px; font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; border-radius: 0; transition: background-color .15s, border-color .15s; } .ds-btn-primary { background: var(--red-btn); border-color: var(--red-btn); } .ds-btn-primary:hover { border-color: var(--red); } .ds-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+      "name": "Menu bar with status capsule",
+      "kind": "nav",
+      "refersTo": "menubar",
+      "description": "The 32px translucent bar: focused app and its menus, the live kernel capsule in the centre, the clock at the right.",
+      "html": "<header class=\"ds-menubar\"><span class=\"ds-mb-app\">Desktop</span><button class=\"ds-mb-menu\">Window</button><button class=\"ds-mb-menu\">Kernel</button><button class=\"ds-capsule\"><i class=\"ds-cap-dot\"></i>RR · q=4<i class=\"ds-cap-sep\"></i><b>51,243</b> ticks<i class=\"ds-cap-sep\"></i><b>7</b> tasks</button><span class=\"ds-mb-clock\">19:28</span></header>",
+      "css": ".ds-menubar { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; background: rgba(10, 13, 26, .55); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); border-bottom: 1px solid rgba(255, 255, 255, .06); font: 400 13px/1 Onest, system-ui, sans-serif; color: rgba(232, 236, 255, .8); white-space: nowrap; } .ds-mb-app { font-weight: 600; font-size: 13.5px; color: #eef0ff; } .ds-mb-menu { height: 24px; padding: 0 9px; border: 0; border-radius: 7px; background: none; color: inherit; font: inherit; cursor: pointer; } .ds-mb-menu:hover, .ds-mb-menu:focus-visible { background: rgba(255, 255, 255, .12); color: #fff; outline: none; } .ds-capsule { margin: 0 auto; height: 24px; display: inline-flex; align-items: center; gap: 9px; padding: 0 12px 0 10px; border-radius: 999px; background: rgba(0, 0, 0, .42); border: 1px solid rgba(255, 255, 255, .1); color: rgba(232, 236, 255, .8); font: 400 12.5px/1 \"Spline Sans Mono\", ui-monospace, monospace; cursor: pointer; transition: background-color .2s; } .ds-capsule:hover { background: rgba(0, 0, 0, .6); } .ds-capsule:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; } .ds-capsule b { font-weight: 500; color: #eef0ff; } .ds-cap-dot { width: 8px; height: 8px; border-radius: 50%; background: #6ee7b7; } .ds-cap-sep { width: 1px; height: 12px; background: rgba(255, 255, 255, .16); } .ds-mb-clock { font-weight: 500; color: #eef0ff; }"
     },
     {
-      "name": "Ghost Button", "kind": "button", "refersTo": "button-ghost",
-      "description": "Secondary actions.",
-      "html": "<button class=\"ds-btn-ghost\">Power off</button>",
-      "css": ".ds-btn-ghost { border: 1px solid var(--line-2); background: transparent; color: var(--cream); cursor: pointer; padding: 10px 16px; font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; border-radius: 0; transition: background-color .15s, border-color .15s; } .ds-btn-ghost:hover { border-color: var(--cream-2); background: var(--raise); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: .45; cursor: not-allowed; }"
+      "name": "Menu",
+      "kind": "custom",
+      "refersTo": "menu",
+      "description": "Glass popover for app menus and the system menu; the highlighted item fills periwinkle.",
+      "html": "<div class=\"ds-menu\" role=\"menu\"><button class=\"ds-menu-item\" role=\"menuitem\">Arrange windows</button><button class=\"ds-menu-item\" role=\"menuitem\">Mission Control<span class=\"ds-kbd\">Ctrl+F3</span></button><hr class=\"ds-menu-sep\"><button class=\"ds-menu-item\" role=\"menuitem\">Show the desktop</button></div>",
+      "css": ".ds-menu { width: 240px; padding: 6px; border-radius: 14px; background: rgba(22, 26, 48, .78); backdrop-filter: blur(32px) saturate(170%); -webkit-backdrop-filter: blur(32px) saturate(170%); border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 30px 70px -24px rgba(0,0,0,.6), 0 12px 28px -12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.07); } .ds-menu-item { display: flex; align-items: center; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: none; text-align: left; cursor: pointer; font: 400 14px/1.3 Onest, system-ui, sans-serif; color: rgba(232, 236, 255, .8); } .ds-menu-item:hover, .ds-menu-item:focus-visible { background: #8b9cff; color: #0b0f22; outline: none; } .ds-kbd { margin-left: auto; font: 400 12px/1 \"Spline Sans Mono\", ui-monospace, monospace; color: #a3abc9; } .ds-menu-item:hover .ds-kbd, .ds-menu-item:focus-visible .ds-kbd { color: #24305e; } .ds-menu-sep { border: 0; border-top: 1px solid rgba(255, 255, 255, .08); margin: 4px 6px; }"
     },
     {
-      "name": "Field", "kind": "input", "refersTo": "input",
-      "description": "Labelled input in the well.",
-      "html": "<label class=\"ds-field\">Quantum<input type=\"number\" value=\"4\"></label>",
-      "css": ".ds-field { display: grid; gap: 6px; font: 500 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); } .ds-field input { background: var(--ground-2); border: 1px solid var(--line-2); border-radius: 0; padding: 9px 11px; color: var(--cream); font: 400 15px var(--sans); letter-spacing: 0; } .ds-field input:hover { border-color: var(--muted); } .ds-field input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+      "name": "Kernel widget",
+      "kind": "card",
+      "refersTo": "widget",
+      "description": "A desktop instrument: name, a live mono reading, a live chart and a factual footnote. Opens its app on click.",
+      "html": "<section class=\"ds-widget\" tabindex=\"0\"><header><h2>Memory</h2><b>181.6 KiB</b></header><div class=\"ds-dots\"><i class=\"on\"></i><i class=\"on\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>2/128 slices in use · 16 MiB heap</p></section>",
+      "css": ".ds-widget { width: 292px; padding: 13px 15px 12px; border-radius: 18px; background: rgba(18, 22, 42, .5); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%); border: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 18px 40px -22px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06); cursor: pointer; transition: transform .25s cubic-bezier(.22, 1, .36, 1), background-color .2s; } .ds-widget:hover { transform: translateY(-2px); background: rgba(24, 29, 54, .6); } .ds-widget:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; } .ds-widget header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; } .ds-widget h2 { margin: 0; font: 600 13px/1.3 Onest, system-ui, sans-serif; color: rgba(232, 236, 255, .8); } .ds-widget b { font: 500 20px/1 \"Spline Sans Mono\", ui-monospace, monospace; color: #fff; } .ds-dots { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; } .ds-dots i { aspect-ratio: 1; border-radius: 50%; background: rgba(255, 255, 255, .12); } .ds-dots i.on { background: #6ee7b7; } .ds-widget p { margin: 7px 0 0; font: 400 13px/1.4 Onest, system-ui, sans-serif; color: rgba(214, 220, 248, .82); }"
     },
     {
-      "name": "Nav Item", "kind": "nav", "refersTo": "nav-item",
-      "description": "View switcher; active item carries a red square.",
-      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-item is-active\">Terminal</button><button class=\"ds-nav-item\">Processes</button></nav>",
-      "css": ".ds-nav { display: flex; flex-direction: column; } .ds-nav-item { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; text-align: left; padding: 10px 28px; font: 400 15px var(--sans); color: var(--muted); transition: color .15s, background-color .15s; } .ds-nav-item::before { content: \"\"; width: 7px; height: 7px; flex: none; } .ds-nav-item:hover { color: var(--cream); background: var(--raise); } .ds-nav-item.is-active { color: var(--cream); } .ds-nav-item.is-active::before { background: var(--red); } .ds-nav-item:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+      "name": "Dock",
+      "kind": "nav",
+      "refersTo": "dock",
+      "description": "Floating glass dock of 52px app tiles; a running dot beneath, a periwinkle tint on the focused app.",
+      "html": "<nav class=\"ds-dock\"><button class=\"ds-dock-app ds-open\" aria-label=\"Terminal\"><span class=\"ds-tile\"><svg viewBox=\"0 0 24 24\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M7 10l3 2-3 2M12 15h5\"/></svg></span></button><button class=\"ds-dock-app ds-focused\" aria-label=\"Code\"><span class=\"ds-tile\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 8l-4 4 4 4M15 8l4 4-4 4\"/></svg></span></button><i class=\"ds-dock-sep\"></i><button class=\"ds-dock-app\" aria-label=\"Files\"><span class=\"ds-tile\"><svg viewBox=\"0 0 24 24\"><path d=\"M3 7h7l2 2h9v10H3z\"/></svg></span></button></nav>",
+      "css": ".ds-dock { display: inline-flex; align-items: flex-end; gap: 6px; padding: 8px 10px; border-radius: 24px; background: rgba(20, 24, 46, .45); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 20px 50px -20px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08); } .ds-dock-app { position: relative; width: 52px; height: 52px; padding: 0; border: 0; background: none; cursor: pointer; transform-origin: 50% 100%; transition: transform .18s cubic-bezier(.22, 1, .36, 1); } .ds-dock-app:hover { transform: scale(1.18); } .ds-dock-app:focus-visible { outline: 2px solid #8b9cff; outline-offset: 3px; border-radius: 14px; } .ds-tile { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 14px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 8px 16px -8px rgba(0,0,0,.6); transition: background-color .2s; } .ds-dock-app:hover .ds-tile { background: rgba(255, 255, 255, .13); } .ds-tile svg { width: 26px; height: 26px; fill: none; stroke: rgba(238, 240, 255, .9); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; } .ds-focused .ds-tile { background: rgba(139, 156, 255, .22); border-color: rgba(139, 156, 255, .55); } .ds-dock-app::after { content: \"\"; position: absolute; left: 50%; bottom: -6px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; } .ds-open::after { background: rgba(255, 255, 255, .7); } .ds-focused::after { background: #fff; } .ds-dock-sep { width: 1px; align-self: stretch; margin: 6px 4px; background: rgba(255, 255, 255, .16); } @media (prefers-reduced-motion: reduce) { .ds-dock-app, .ds-dock-app:hover { transition: none; transform: none; } }"
     },
     {
-      "name": "Leader-Dot Meter", "kind": "custom", "refersTo": "track",
-      "description": "Key, dotted leader, value, over a 2px hairline track with red fill.",
-      "html": "<div class=\"ds-meter\"><div class=\"ds-lead\"><span>Heap</span><i></i><b>2.4 / 16 MiB</b></div><div class=\"ds-track\"><i style=\"width:15%\"></i></div></div>",
-      "css": ".ds-lead { display: flex; align-items: baseline; gap: 10px; font: 400 15.5px/1.35 var(--mono); padding: 7px 0; } .ds-lead span { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; } .ds-lead i { flex: 1; border-bottom: 1px dotted var(--line-2); transform: translateY(-3px); min-width: 12px; } .ds-lead b { font-weight: 500; color: var(--cream); white-space: nowrap; } .ds-track { position: relative; height: 2px; background: var(--line); margin-top: 2px; } .ds-track > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--red); transition: width .4s cubic-bezier(.16,1,.3,1); }"
+      "name": "Window",
+      "kind": "card",
+      "refersTo": "window-focused",
+      "description": "Focused glass window with title bar, truthful subtitle and round controls; close turns rose on hover.",
+      "html": "<article class=\"ds-win\"><header class=\"ds-win-bar\"><h2>Files</h2><span class=\"ds-win-sub\">project files on the host · the kernel has no file system</span><button class=\"ds-win-ctl\" aria-label=\"Minimise\"><svg viewBox=\"0 0 12 12\"><path d=\"M2 6h8\"/></svg></button><button class=\"ds-win-ctl ds-close\" aria-label=\"Close\"><svg viewBox=\"0 0 12 12\"><path d=\"M3 3l6 6M9 3l-6 6\"/></svg></button></header><div class=\"ds-win-body\">kernel/src/programs</div></article>",
+      "css": ".ds-win { width: 460px; border-radius: 14px; overflow: hidden; background: rgba(26, 31, 56, .72); backdrop-filter: blur(30px) saturate(160%); -webkit-backdrop-filter: blur(30px) saturate(160%); border: 1px solid rgba(255, 255, 255, .17); box-shadow: 0 40px 90px -28px rgba(0,0,0,.7), 0 14px 32px -14px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1); color: #eef0ff; } .ds-win-bar { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 8px 0 14px; border-bottom: 1px solid rgba(255, 255, 255, .08); } .ds-win-bar h2 { margin: 0; font: 600 14px/1.3 Onest, system-ui, sans-serif; color: #fff; } .ds-win-sub { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 13px/1.3 Onest, system-ui, sans-serif; color: #a3abc9; } .ds-win-ctl { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .07); color: rgba(232, 236, 255, .8); cursor: pointer; transition: background-color .15s; } .ds-win-ctl svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; } .ds-win-ctl:hover { background: rgba(255, 255, 255, .18); color: #fff; } .ds-close:hover { background: #ff6b8b; } .ds-win-ctl:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; } .ds-win-body { padding: 16px 18px 20px; font: 400 13.5px/1.35 \"Spline Sans Mono\", ui-monospace, monospace; color: rgba(232, 236, 255, .8); }"
     },
     {
-      "name": "State Bullet", "kind": "chip", "refersTo": null,
-      "description": "Square task-state marker: red RUNNING, gold READY, outline otherwise.",
-      "html": "<span class=\"ds-status RUNNING\">Running</span> <span class=\"ds-status READY\">Ready</span> <span class=\"ds-status\">Blocked</span>",
-      "css": ".ds-status { display: inline-flex; align-items: center; gap: 8px; font: 400 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 16px; } .ds-status::before { content: \"\"; width: 7px; height: 7px; border: 1px solid var(--muted); } .ds-status.RUNNING { color: var(--cream); } .ds-status.RUNNING::before { background: var(--red); border-color: var(--red); } .ds-status.READY { color: var(--cream-2); } .ds-status.READY::before { background: var(--gold); border-color: var(--gold); }"
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action per surface, in periwinkle.",
+      "html": "<button class=\"ds-btn-primary\">Reboot with this scheduler</button>",
+      "css": ".ds-btn-primary { height: 32px; padding: 0 14px; border-radius: 9px; border: 1px solid #8b9cff; background: #8b9cff; color: #0b0f22; font: 500 13.5px/1 Onest, system-ui, sans-serif; cursor: pointer; transition: background-color .15s, border-color .15s; } .ds-btn-primary:hover { background: #a3b1ff; border-color: #a3b1ff; } .ds-btn-primary:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: .45; cursor: not-allowed; }"
     },
     {
-      "name": "Boot Lockup", "kind": "custom", "refersTo": null,
-      "description": "Cap-height red tile with solid A, gold rule from inside its lower right, wordmark one tile below.",
-      "html": "<div class=\"ds-lockup\"><svg class=\"ds-mark\" viewBox=\"0 0 40 40\" aria-hidden=\"true\"><rect width=\"40\" height=\"40\"/><text x=\"20\" y=\"31\" text-anchor=\"middle\">A</text></svg><i class=\"ds-rule\"></i></div><div class=\"ds-wordmark\">ASTRA</div>",
-      "css": ".ds-lockup { --tile: 68px; position: relative; width: var(--tile); height: var(--tile); margin-bottom: var(--tile); } .ds-mark { display: block; width: 100%; height: 100%; } .ds-mark rect { fill: var(--red); } .ds-mark text { fill: var(--cream); font: 600 30px var(--sans); } .ds-rule { position: absolute; left: 62%; top: 70%; width: calc(var(--tile) * 1.35); height: 1px; background: var(--gold); } .ds-wordmark { font: 500 96px/.9 var(--sans); letter-spacing: -.035em; color: var(--cream); }"
+      "name": "Glass button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Secondary action on glass.",
+      "html": "<button class=\"ds-btn\">Run in U-mode</button>",
+      "css": ".ds-btn { height: 32px; padding: 0 14px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .06); color: #eef0ff; font: 500 13.5px/1 Onest, system-ui, sans-serif; cursor: pointer; transition: background-color .15s, border-color .15s; } .ds-btn:hover { background: rgba(255, 255, 255, .13); border-color: rgba(255, 255, 255, .22); } .ds-btn:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Recessed well input inside glass.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"program arguments\">",
+      "css": ".ds-input { padding: 7px 10px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .14); background: rgba(4, 6, 14, .45); color: #eef0ff; font: 400 14px/1.3 Onest, system-ui, sans-serif; } .ds-input::placeholder { color: rgba(200, 208, 240, .55); } .ds-input:hover { border-color: #a3abc9; } .ds-input:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter chip",
+      "kind": "chip",
+      "refersTo": "chip-on",
+      "description": "Journal filter pill; the active chip fills periwinkle.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-on\">All</button><button class=\"ds-chip\">Wake-ups</button><button class=\"ds-chip\">Kills</button></div>",
+      "css": ".ds-chips { display: flex; gap: 4px; } .ds-chip { height: 26px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .16); background: none; color: #a3abc9; font: 400 13px/1 Onest, system-ui, sans-serif; cursor: pointer; } .ds-chip:hover { color: #eef0ff; border-color: #a3abc9; } .ds-chip:focus-visible { outline: 2px solid #8b9cff; outline-offset: 2px; } .ds-chip.ds-on { background: #8b9cff; border-color: #8b9cff; color: #0b0f22; }"
+    },
+    {
+      "name": "Spotlight",
+      "kind": "input",
+      "refersTo": "spotlight",
+      "description": "Search sheet for apps and shell commands; the selected hit fills periwinkle.",
+      "html": "<div class=\"ds-spot\"><input class=\"ds-spot-q\" value=\"prim\" aria-label=\"Search\"><div class=\"ds-spot-hits\"><button class=\"ds-spot-hit ds-sel\">primes 200000<small>run in the kernel shell</small></button><button class=\"ds-spot-hit\">Processes<small>app</small></button></div></div>",
+      "css": ".ds-spot { width: 520px; border-radius: 18px; overflow: hidden; background: rgba(22, 26, 50, .8); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 40px 100px -30px rgba(0,0,0,.8); } .ds-spot-q { width: 100%; padding: 14px 18px; border: 0; background: transparent; outline: none; font: 300 24px/1.2 Onest, system-ui, sans-serif; color: #fff; } .ds-spot-hits { display: grid; padding: 6px; border-top: 1px solid rgba(255, 255, 255, .08); } .ds-spot-hit { padding: 9px 12px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; font: 400 14.5px/1.3 Onest, system-ui, sans-serif; color: #eef0ff; } .ds-spot-hit small { display: block; font-size: 12.5px; color: #a3abc9; } .ds-spot-hit:hover, .ds-spot-hit:focus-visible, .ds-spot-hit.ds-sel { background: #8b9cff; color: #0b0f22; outline: none; } .ds-spot-hit:hover small, .ds-spot-hit:focus-visible small, .ds-spot-hit.ds-sel small { color: #24305e; }"
     }
   ],
   "narrative": {
-    "northStar": "The Instrument Boot Console",
-    "overview": "ASTRA reads like the start-up screen of a precise piece of lab equipment. The student's Figma boot screen (\"Design ASTRAOS Desktop Environment\") is the binding source. It sets the olive-black ground, cream type, one red square mark, gold mono labels, hairline rules and leader-dot readouts. The panel continues that screen. Every view looks like a page of the same instrument's readout.\n\nThe panel is dense but quiet. A faint 48px cream grid sits under everything, and hairlines do the structural work that boxes would do elsewhere. Color carries state. It is never used as decoration. Every value, state and timestamp on screen comes from the live kernel (boot trace, `#T SNAP` snapshots, test logs). Nothing is mocked, and when the kernel stops, nothing may keep looking live.",
+    "northStar": "The Kernel Twilight",
+    "overview": "NEXUS OS is a spatial desktop at dusk. A deep twilight ground carries a slow generative aurora, and the aurora's light is the kernel itself. Each running task is a soft field of colour whose size and brightness follow its real CPU share. A dispatch makes its field flare, a kill flashes rose from where the task was, and the heap in use glows along the horizon. With no kernel, the sky stays dark. Over that sky float layered panes of dark, blurred glass: a translucent menu bar with a live kernel capsule, four kernel widgets, a magnifying dock, and windows that open with a soft settle.\n\nThe system is calm and premium, but it is never decorative. Every number on screen is a reading from the live kernel trace (`#T SNAP`, `HEAPMAP`, `DISPATCH`, `OFF`, `WAKE`, `SPAWN`, `EXIT`, the boot trace) or from a real host action (a cargo build, a file on disk, a test log). The glass holds instruments, not ornaments. Density is moderate. The desktop level is generous, with a large thin clock and wide margins. Inside windows the layout is compact and tabular, and Spline Sans Mono carries the figures.\n\nConfirmed rejections: the discarded ASTRA and carbon/coral \"kernel topography\" NEXUS looks (none of their tokens carry forward), a photo wallpaper with decorative widgets, a centred lock clock in a classmate's style, and the generic dashboard.",
     "keyCharacteristics": [
-      "Olive-black ground with a faint 48px grid; cream text; square corners everywhere.",
-      "One red that means \"active / running / progress\"; gold for labels and markers; olive for \"connected / passed / started\".",
-      "Stack Sans Text for words, JetBrains Mono for numbers, labels and the machine's voice.",
-      "Leader-dot readouts and 1-2px hairline tracks are the house instruments.",
-      "Flat: no shadows, glass, glow or gradients."
+      "A living aurora wallpaper driven only by scheduler and heap data.",
+      "Dark translucent glass at 22-40px blur, with a hairline inner highlight and soft, layered shadows.",
+      "One electric periwinkle accent for focus, selection and the primary action.",
+      "Task colours that mean the same task everywhere: aurora, scheduler ribbon, charts and legends.",
+      "Onest for words; Spline Sans Mono, with tabular figures, for kernel numbers.",
+      "Ease-out motion, all of it off under reduced motion."
     ],
     "rules": [
-      { "name": "The One Meaning Rule", "body": "Red means live activity (running, progress, active), gold labels and marks, and olive confirms (connected, passed, started). An accent never appears on screen just for decoration.", "section": "colors" },
-      { "name": "The Faint-Is-Not-Text Rule", "body": "The faint color fails AA on the ground, so it is for marks and dots only. Any text uses muted or pending at the least.", "section": "colors" },
-      { "name": "The Terminal Speaks ASTRA Rule", "body": "The kernel shell prints basic ANSI colors, and the xterm theme in app.js maps them into this world. Keep the terminal's colors in this mapping. Don't fall back to xterm defaults.", "section": "colors" },
-      { "name": "The Numbers Are Mono Rule", "body": "Anything the kernel reports is set in JetBrains Mono. The sans is only for names and sentences.", "section": "typography" }
+      {
+        "name": "The Lead Light Rule",
+        "body": "The three busiest tasks (above 2% CPU share) own Lead Coral, Lead Cyan and Lead Mint. A task keeps its slot, and so its colour, for as long as it stays in the top three. A freed slot goes to the next newcomer without reshuffling the others. On the aurora a lead field is large and saturated (up to 62% alpha). Every other task is a small dim haze (at most 14% alpha, shrinking as tasks multiply), so many tasks never add up to white. In the ribbon, non-lead tasks are dim white.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Accent Rule",
+        "body": "Periwinkle is the only interaction colour. State colours report kernel state and are never used for selection, focus or the primary action.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rose Means Death Rule",
+        "body": "Rose appears only for kills, failures and errors, never for emphasis or decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Words are Onest. Anything the kernel counts (ticks, pids, percentages, sizes, times, return values, and policy names in controls) is Spline Sans Mono with tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Thin Clock Rule",
+        "body": "Weight 200 belongs to the clock alone. Nothing else on the desktop goes below 300.",
+        "section": "typography"
+      },
+      {
+        "name": "The Aurora Shows Through Rule",
+        "body": "No large surface is opaque. A pane that hides the sky completely has left the world. The wells inside windows are the only near-solid areas, and even they are 45-55% alpha.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Focus Lifts Rule",
+        "body": "Focus is shown by depth and tint together. The focused window gets more glass, a brighter edge, a deeper shadow and a periwinkle icon; unfocused windows recede.",
+        "section": "elevation"
+      }
     ],
     "dos": [
-      "Do take every on-screen value from the live kernel (boot trace, snapshots, test logs). Show \"–\" or a stated reason when no value is available.",
-      "Do make stopped or disconnected state visibly stale: values dimmed to muted, fills at zero, and the reason in words.",
-      "Do build new readouts from leader-dot rows, hairline tracks and square state bullets.",
-      "Do set kernel data in JetBrains Mono and names or prose in Stack Sans Text.",
-      "Do use red-ink, not red, when red has to be small text."
+      "Do drive every number, colour field and state on screen from the live kernel trace or a real host action. When the kernel is off, leave the sky dark and the readings blank.",
+      "Do give the three busiest tasks the lead colours and let each one keep its colour while it stays in the top three; draw everything else dim.",
+      "Do use Spline Sans Mono with tabular figures for every kernel number, and Onest for words.",
+      "Do build new surfaces as translucent glass with a hairline edge, an inner top highlight and a soft layered shadow, with blur scaled to the surface's importance (26-40px).",
+      "Do use periwinkle (#8b9cff) as the single interaction colour, with On-Accent Ink (#0b0f22) on it.",
+      "Do move with the settle curve, `cubic-bezier(.22, 1, .36, 1)` (ease-out), at 120-550ms for interface motion. The only looping motion is the capsule's live dot, which breathes over 2.4s.",
+      "Do switch off every transition, animation, aurora drift and dock magnification under `prefers-reduced-motion`. In that mode the aurora jumps straight to each new reading, and the lock screen leaves at once.",
+      "Do label what is not in the kernel as what it is: host files, host builds, the separate Debian distribution, and wake-ups (never IPC)."
     ],
     "donts": [
-      "Don't add shadows, glass, glows, gradients or rounded corners. The only gradients allowed are the 48px grid and the select chevron.",
-      "Don't use faint for text.",
-      "Don't use round status dots.",
-      "Don't use red for anything that isn't active, running, progress or failure.",
-      "Don't leave a value looking live after the kernel has stopped."
+      "Don't carry forward any token from the discarded ASTRA or carbon/coral/celadon topography worlds (olive-cream grounds, teal-carbon panels, square-cornered surfaces).",
+      "Don't use a photo or static image as the wallpaper, or add decorative widgets that show nothing real.",
+      "Don't use a state colour (coral, mint, amber, rose) for selection, focus or a primary action.",
+      "Don't use rose for anything except kills, failures and errors.",
+      "Don't make a large surface fully opaque; the aurora has to show through.",
+      "Don't use bouncing, overshooting or ease-in motion.",
+      "Don't show a mocked, simulated or invented value anywhere, including in placeholders and demos."
     ]
   }
 }
