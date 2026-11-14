@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T00:00:00Z",
+  "title": "Design System: ASTRA",
+  "extensions": {
+    "colorMeta": {
+      "ground":   { "role": "neutral",   "displayName": "Olive-Black Ground", "canonical": "oklch(26.1% 0.011 115)", "tonalRamp": ["#0b0b0a", "#252522", "#42433e", "#61625c", "#82837c", "#a5a6a0", "#c9cac5", "#eeefec"] },
+      "ground-2": { "role": "neutral",   "displayName": "Well", "canonical": "oklch(23.2% 0.009 116)", "tonalRamp": ["#0b0b0a", "#252523", "#42423e", "#61625c", "#82837d", "#a5a6a1", "#c9c9c6", "#eeefec"] },
+      "raise":    { "role": "neutral",   "displayName": "Raise (hover)", "canonical": "oklch(28.6% 0.012 114)", "tonalRamp": ["#0b0b09", "#252522", "#42433d", "#61625b", "#82837b", "#a5a69f", "#c9cac5", "#eeefec"] },
+      "line":     { "role": "neutral",   "displayName": "Hairline", "canonical": "oklch(36.1% 0.010 115)", "tonalRamp": ["#0b0b0a", "#252522", "#42423e", "#61625c", "#82837d", "#a5a6a0", "#c9c9c5", "#eeefec"] },
+      "line-2":   { "role": "neutral",   "displayName": "Hairline Strong", "canonical": "oklch(41.3% 0.013 113)", "tonalRamp": ["#0b0b09", "#252521", "#42433d", "#61625a", "#82837b", "#a5a69f", "#c9cac4", "#eeefec"] },
+      "cream":    { "role": "neutral",   "displayName": "Cream", "canonical": "oklch(91.0% 0.026 90)", "tonalRamp": ["#0d0b07", "#28251d", "#464236", "#666152", "#888272", "#aaa597", "#cdc9bf", "#f1eee8"] },
+      "cream-2":  { "role": "neutral",   "displayName": "Cream Dim", "canonical": "oklch(81.7% 0.027 92)", "tonalRamp": ["#0c0b07", "#28251d", "#464236", "#666152", "#878272", "#a9a597", "#ccc9bf", "#f0eee8"] },
+      "muted":    { "role": "neutral",   "displayName": "Muted (6.2:1)", "canonical": "oklch(71.9% 0.026 99)", "tonalRamp": ["#0c0b07", "#27251d", "#444237", "#646253", "#868373", "#a8a598", "#cbc9bf", "#f0efe8"] },
+      "pending":  { "role": "neutral",   "displayName": "Pending (4.9:1)", "canonical": "oklch(65.5% 0.022 98)", "tonalRamp": ["#0c0b08", "#27251f", "#444238", "#646255", "#858375", "#a8a59a", "#cbc9c1", "#f0efe9"] },
+      "faint":    { "role": "neutral",   "displayName": "Faint (decorative only)", "canonical": "oklch(53.2% 0.017 103)", "tonalRamp": ["#0b0b09", "#262520", "#43423b", "#636258", "#848378", "#a6a59d", "#cac9c3", "#efefeb"] },
+      "red":      { "role": "primary",   "displayName": "Signal Red", "canonical": "oklch(55.0% 0.148 32)", "tonalRamp": ["#1b0301", "#451108", "#712518", "#a03c2b", "#c65f4c", "#e18a79", "#fab6a8", "#ffe4db"] },
+      "red-ink":  { "role": "primary",   "displayName": "Red Ink (small text, 4.8:1)", "canonical": "oklch(67.1% 0.136 34)", "tonalRamp": ["#1a0402", "#42130a", "#6e291a", "#9b412e", "#c1634f", "#dd8d7b", "#f6b8a9", "#ffe5dc"] },
+      "red-btn":  { "role": "primary",   "displayName": "Button Red", "canonical": "oklch(50.4% 0.135 32)", "tonalRamp": ["#1a0402", "#42130c", "#6e291d", "#9b4131", "#c16352", "#dd8d7d", "#f6b8ab", "#ffe5dc"] },
+      "gold":     { "role": "secondary", "displayName": "Instrument Gold", "canonical": "oklch(68.6% 0.103 83)", "tonalRamp": ["#120900", "#322200", "#563d02", "#7b5b12", "#9e7d3a", "#bda16d", "#dbc6a0", "#faedd6"] },
+      "olive":    { "role": "tertiary",  "displayName": "Olive Lamp", "canonical": "oklch(72.3% 0.093 119)", "tonalRamp": ["#0a0d01", "#222808", "#3e4718", "#5c682c", "#7d8a4d", "#a0ac7a", "#c5cea9", "#ecf2db"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Wordmark", "purpose": "Boot-screen ASTRA wordmark only." },
+      "headline": { "displayName": "Headline", "purpose": "About title." },
+      "title": { "displayName": "Brand", "purpose": "Header brand name beside the mark." },
+      "body": { "displayName": "Body", "purpose": "Prose (max 68ch) and task names; tabular figures." },
+      "data": { "displayName": "Data", "purpose": "Every kernel-reported value: readouts, tables, boot rows." },
+      "section-label": { "displayName": "Section label", "purpose": "Uppercase cream mono block headers." },
+      "label": { "displayName": "Label", "purpose": "Uppercase muted mono keys, table heads, form labels." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "Boot dissolve (.5s opacity + 6px blur), track fills (.4s), boot row color (.3s)." },
+      { "name": "hover", "value": "0.15s", "purpose": "Color and background on nav and buttons." },
+      { "name": "reduced-motion", "value": "transition-duration: 0s", "purpose": "All transitions instant under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "narrow", "value": "820px", "purpose": "One column, nav as horizontal strip, terminal 12px." },
+      { "name": "medium", "value": "1180px", "purpose": "Rail drops under main as a 3-column strip; nav 168px." },
+      { "name": "projector", "value": "1280px", "purpose": "min-width: terminal type 16px (14px between)." }
+    ],
+    "terminalTheme": {
+      "background": "transparent", "foreground": "#e8e1ce", "cursor": "#d4644d", "cursorAccent": "#1d1e19", "selectionBackground": "#5a3a30",
+      "black": "#2a2b24", "brightBlack": "#8a8778", "red": "#d4644d", "brightRed": "#e07a62",
+      "green": "#9fae6a", "brightGreen": "#b5c482", "yellow": "#c9a45a", "brightYellow": "#d9b872",
+      "blue": "#8fa3a6", "brightBlue": "#a6babd", "magenta": "#c08a7a", "brightMagenta": "#d4a090",
+      "cyan": "#8fae9f", "brightCyan": "#a6c4b5", "white": "#e8e1ce", "brightWhite": "#f4efe2"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
+      "description": "Committing action (apply scheduler, boot, run).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Apply</button>",
+      "css": ".ds-btn { border: 1px solid var(--line-2); background: transparent; color: var(--cream); cursor: pointer; padding: 10px 16px; font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; border-radius: 0; transition: background-color .15s, border-color .15s; } .ds-btn-primary { background: var(--red-btn); border-color: var(--red-btn); } .ds-btn-primary:hover { border-color: var(--red); } .ds-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button", "kind": "button", "refersTo": "button-ghost",
+      "description": "Secondary actions.",
+      "html": "<button class=\"ds-btn-ghost\">Power off</button>",
+      "css": ".ds-btn-ghost { border: 1px solid var(--line-2); background: transparent; color: var(--cream); cursor: pointer; padding: 10px 16px; font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; border-radius: 0; transition: background-color .15s, border-color .15s; } .ds-btn-ghost:hover { border-color: var(--cream-2); background: var(--raise); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: .45; cursor: not-allowed; }"
+    },
+    {
+      "name": "Field", "kind": "input", "refersTo": "input",
+      "description": "Labelled input in the well.",
+      "html": "<label class=\"ds-field\">Quantum<input type=\"number\" value=\"4\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font: 500 11.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); } .ds-field input { background: var(--ground-2); border: 1px solid var(--line-2); border-radius: 0; padding: 9px 11px; color: var(--cream); font: 400 15px var(--sans); letter-spacing: 0; } .ds-field input:hover { border-color: var(--muted); } .ds-field input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+    },
+    {
+      "name": "Nav Item", "kind": "nav", "refersTo": "nav-item",
+      "description": "View switcher; active item carries a red square.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-item is-active\">Terminal</button><button class=\"ds-nav-item\">Processes</button></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; } .ds-nav-item { display: flex; align-items: center; gap: 12px; background: none; border: 0; cursor: pointer; text-align: left; padding: 10px 28px; font: 400 15px var(--sans); color: var(--muted); transition: color .15s, background-color .15s; } .ds-nav-item::before { content: \"\"; width: 7px; height: 7px; flex: none; } .ds-nav-item:hover { color: var(--cream); background: var(--raise); } .ds-nav-item.is-active { color: var(--cream); } .ds-nav-item.is-active::before { background: var(--red); } .ds-nav-item:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }"
+    },
+    {
+      "name": "Leader-Dot Meter", "kind": "custom", "refersTo": "track",
+      "description": "Key, dotted leader, value, over a 2px hairline track with red fill.",
+      "html": "<div class=\"ds-meter\"><div class=\"ds-lead\"><span>Heap</span><i></i><b>2.4 / 16 MiB</b></div><div class=\"ds-track\"><i style=\"width:15%\"></i></div></div>",
+      "css": ".ds-lead { display: flex; align-items: baseline; gap: 10px; font: 400 15.5px/1.35 var(--mono); padding: 7px 0; } .ds-lead span { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 13px; } .ds-lead i { flex: 1; border-bottom: 1px dotted var(--line-2); transform: translateY(-3px); min-width: 12px; } .ds-lead b { font-weight: 500; color: var(--cream); white-space: nowrap; } .ds-track { position: relative; height: 2px; background: var(--line); margin-top: 2px; } .ds-track > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--red); transition: width .4s cubic-bezier(.16,1,.3,1); }"
+    },
+    {
+      "name": "State Bullet", "kind": "chip", "refersTo": null,
+      "description": "Square task-state marker: red RUNNING, gold READY, outline otherwise.",
+      "html": "<span class=\"ds-status RUNNING\">Running</span> <span class=\"ds-status READY\">Ready</span> <span class=\"ds-status\">Blocked</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 8px; font: 400 13px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 16px; } .ds-status::before { content: \"\"; width: 7px; height: 7px; border: 1px solid var(--muted); } .ds-status.RUNNING { color: var(--cream); } .ds-status.RUNNING::before { background: var(--red); border-color: var(--red); } .ds-status.READY { color: var(--cream-2); } .ds-status.READY::before { background: var(--gold); border-color: var(--gold); }"
+    },
+    {
+      "name": "Boot Lockup", "kind": "custom", "refersTo": null,
+      "description": "Cap-height red tile with solid A, gold rule from inside its lower right, wordmark one tile below.",
+      "html": "<div class=\"ds-lockup\"><svg class=\"ds-mark\" viewBox=\"0 0 40 40\" aria-hidden=\"true\"><rect width=\"40\" height=\"40\"/><text x=\"20\" y=\"31\" text-anchor=\"middle\">A</text></svg><i class=\"ds-rule\"></i></div><div class=\"ds-wordmark\">ASTRA</div>",
+      "css": ".ds-lockup { --tile: 68px; position: relative; width: var(--tile); height: var(--tile); margin-bottom: var(--tile); } .ds-mark { display: block; width: 100%; height: 100%; } .ds-mark rect { fill: var(--red); } .ds-mark text { fill: var(--cream); font: 600 30px var(--sans); } .ds-rule { position: absolute; left: 62%; top: 70%; width: calc(var(--tile) * 1.35); height: 1px; background: var(--gold); } .ds-wordmark { font: 500 96px/.9 var(--sans); letter-spacing: -.035em; color: var(--cream); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Instrument Boot Console",
+    "overview": "ASTRA reads like the start-up screen of a precise piece of lab equipment. The student's Figma boot screen (\"Design ASTRAOS Desktop Environment\") is the binding source. It sets the olive-black ground, cream type, one red square mark, gold mono labels, hairline rules and leader-dot readouts. The panel continues that screen. Every view looks like a page of the same instrument's readout.\n\nThe panel is dense but quiet. A faint 48px cream grid sits under everything, and hairlines do the structural work that boxes would do elsewhere. Color carries state. It is never used as decoration. Every value, state and timestamp on screen comes from the live kernel (boot trace, `#T SNAP` snapshots, test logs). Nothing is mocked, and when the kernel stops, nothing may keep looking live.",
+    "keyCharacteristics": [
+      "Olive-black ground with a faint 48px grid; cream text; square corners everywhere.",
+      "One red that means \"active / running / progress\"; gold for labels and markers; olive for \"connected / passed / started\".",
+      "Stack Sans Text for words, JetBrains Mono for numbers, labels and the machine's voice.",
+      "Leader-dot readouts and 1-2px hairline tracks are the house instruments.",
+      "Flat: no shadows, glass, glow or gradients."
+    ],
+    "rules": [
+      { "name": "The One Meaning Rule", "body": "Red means live activity (running, progress, active), gold labels and marks, and olive confirms (connected, passed, started). An accent never appears on screen just for decoration.", "section": "colors" },
+      { "name": "The Faint-Is-Not-Text Rule", "body": "The faint color fails AA on the ground, so it is for marks and dots only. Any text uses muted or pending at the least.", "section": "colors" },
+      { "name": "The Terminal Speaks ASTRA Rule", "body": "The kernel shell prints basic ANSI colors, and the xterm theme in app.js maps them into this world. Keep the terminal's colors in this mapping. Don't fall back to xterm defaults.", "section": "colors" },
+      { "name": "The Numbers Are Mono Rule", "body": "Anything the kernel reports is set in JetBrains Mono. The sans is only for names and sentences.", "section": "typography" }
+    ],
+    "dos": [
+      "Do take every on-screen value from the live kernel (boot trace, snapshots, test logs). Show \"–\" or a stated reason when no value is available.",
+      "Do make stopped or disconnected state visibly stale: values dimmed to muted, fills at zero, and the reason in words.",
+      "Do build new readouts from leader-dot rows, hairline tracks and square state bullets.",
+      "Do set kernel data in JetBrains Mono and names or prose in Stack Sans Text.",
+      "Do use red-ink, not red, when red has to be small text."
+    ],
+    "donts": [
+      "Don't add shadows, glass, glows, gradients or rounded corners. The only gradients allowed are the 48px grid and the select chevron.",
+      "Don't use faint for text.",
+      "Don't use round status dots.",
+      "Don't use red for anything that isn't active, running, progress or failure.",
+      "Don't leave a value looking live after the kernel has stopped."
+    ]
+  }
+}

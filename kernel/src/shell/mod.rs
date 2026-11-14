@@ -52,14 +52,15 @@ pub fn run(args: &BootArgs) -> u32 {
     0
 }
 
-// ANSI colours (understood by xterm.js and real terminals alike).
-const PURPLE: &str = "\x1b[38;5;141m";
-const GREEN: &str = "\x1b[38;5;114m";
+// Basic ANSI colours: a real terminal shows its own palette, and the web
+// panel maps them to the NEXUS theme (coral accent, celadon, chalk).
+const PURPLE: &str = "\x1b[31m"; // accent: NEXUS coral
+const GREEN: &str = "\x1b[32m";
 const DIM: &str = "\x1b[90m";
 const BOLD: &str = "\x1b[1m";
 const RESET: &str = "\x1b[0m";
-const PINK: &str = "\x1b[38;5;219m";
-const LINE: &str = "\x1b[38;5;97m";
+const PINK: &str = "\x1b[33m"; // gold
+const LINE: &str = "\x1b[90m";
 
 /// A horizontal rule between sections of output.
 fn rule() {
@@ -76,7 +77,7 @@ fn banner() {
     } else {
         println!();
     }
-    println!("{PURPLE}[BOOT]{RESET} Micro-OS v{} (riscv64, S-mode, {})", env!("CARGO_PKG_VERSION"), drivers::sbi::impl_name());
+    println!("{PURPLE}[BOOT]{RESET} NEXUS \u{00b7} Micro-OS v{} (riscv64, S-mode, {})", env!("CARGO_PKG_VERSION"), drivers::sbi::impl_name());
     println!("{PURPLE}[BOOT]{RESET} Kernel subsystems:");
     ok(format_args!("Trap vector installed (timer interrupts on)"));
     ok(format_args!("Kernel heap ready ({} MiB, first-fit free list)", h.capacity >> 20));
@@ -89,12 +90,12 @@ fn banner() {
     for t in scheduler::snapshot() {
         println!("         {DIM}->{RESET} {} (pid: {})", t.name, t.tid);
     }
-    println!("{GREEN}[\u{2713}]{RESET}    {BOLD}Micro-OS is ready!{RESET} {PINK}\u{2726}{RESET}  {DIM}type 'help' for commands, 'progs' for programs{RESET}");
+    println!("{GREEN}[\u{2713}]{RESET}    {BOLD}NEXUS is ready.{RESET} {PINK}\u{25a0}{RESET}  {DIM}type 'help' for commands, 'progs' for programs{RESET}");
     rule();
 }
 
 fn prompt() {
-    print!("{PURPLE}{BOLD}micro@os{RESET}:{GREEN}~{RESET}$ ");
+    print!("{PURPLE}{BOLD}nexus@os{RESET}:{GREEN}~{RESET}$ ");
 }
 
 fn shell_main() {
@@ -135,11 +136,41 @@ fn shell_main() {
 
 /// Live monitor task: one machine-readable snapshot per interval.
 fn monitor(interval_ms: u64) {
+    let per_map = (1000 / interval_ms.max(1)).max(1);
+    let mut n = 0u64;
     while !SHELL_DONE.load(Relaxed) {
         emit_snapshot();
+        if n % per_map == 0 {
+            emit_heap_map();
+        }
+        n += 1;
         sys::sleep_ms(interval_ms);
     }
     emit_snapshot();
+}
+
+/// Ticks between keyboard polls while the shell waits for input.
+const KEY_POLL_TICKS: u64 = 10;
+
+/// Slices in the heap map: 16 MiB / 128 = 128 KiB each.
+const HEAP_MAP_SLICES: usize = 128;
+
+/// `#T ... HEAPMAP slices=128 slice_bytes=N map=<hex byte per slice>`: how
+/// full each slice of the heap is (00 free .. ff full), from the free list.
+fn emit_heap_map() {
+    struct Hex<'a>(&'a [u8]);
+    impl core::fmt::Display for Hex<'_> {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            self.0.iter().try_for_each(|b| write!(f, "{:02x}", b))
+        }
+    }
+    let mut map = [0u8; HEAP_MAP_SLICES];
+    memory::occupancy(&mut map);
+    let cap = memory::stats().capacity;
+    console::trace_always(
+        "HEAPMAP",
+        format_args!("slices={} slice_bytes={} map={}", HEAP_MAP_SLICES, cap.div_ceil(HEAP_MAP_SLICES), Hex(&map)),
+    );
 }
 
 /// `#T ... SNAP key=value ... tasks=tid:name:state:prio:level:cpu:dispatches;...`
@@ -171,7 +202,9 @@ fn read_line(line: &mut String) {
     line.clear();
     loop {
         match console::read_byte() {
-            None => scheduler::sleep_ticks(1),
+            // Nothing typed: check again in 10 ms. Polling every 1 ms tick
+            // woke the shell 1000 times a second for no work.
+            None => scheduler::sleep_ticks(KEY_POLL_TICKS),
             Some(b'\r' | b'\n') => {
                 println!();
                 return;
@@ -233,7 +266,7 @@ fn sysinfo() {
     let h = memory::stats();
     let (ks, ke) = memory::kernel_image();
     let row = |k: &str, v: core::fmt::Arguments| println!("  {PURPLE}{:<12}{RESET} {}", k, v);
-    row("os", format_args!("Micro-OS v{}", env!("CARGO_PKG_VERSION")));
+    row("os", format_args!("NEXUS (Micro-OS v{})", env!("CARGO_PKG_VERSION")));
     row("machine", format_args!("QEMU virt, 1 RISC-V hart (riscv64gc), supervisor mode"));
     row("firmware", format_args!("{} (SBI v{}.{})", drivers::sbi::impl_name(), major, minor));
     row("kernel", format_args!("{:#x}..{:#x} ({} KiB)", ks, ke, (ke - ks) / 1024));
@@ -306,7 +339,7 @@ fn run_program(words: &[&str]) {
             println!("^C");
             scheduler::request_cancel(tid);
         }
-        scheduler::sleep_ticks(1);
+        scheduler::sleep_ticks(KEY_POLL_TICKS);
     }
 }
 

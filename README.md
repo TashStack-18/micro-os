@@ -8,7 +8,7 @@ reports what every mechanism did through structured traces that Python turns
 into tables and plots. On screen it appears as **NEXUS OS**, a browser desktop
 that drives the running kernel.
 
-![NEXUS OS terminal: a U-mode program making system calls and a second one being killed for a privileged instruction](results/screenshots/02_terminal.png)
+![NEXUS OS terminal: a U-mode program making system calls and a second one being killed for a privileged instruction](results/screenshots/04_terminal.png)
 
 *Above: `user hello` runs in U-mode and reaches the kernel only through
 `ecall` (15 system calls); `user priv` tries to read a supervisor register and
@@ -35,12 +35,16 @@ Every pixel is live kernel output.*
 | | |
 |---|---|
 | ![Boot](results/screenshots/01_boot.png) | **Boot.** The boot screen replays this boot's real trace: hart entry, firmware, trap vector, heap, timer, scheduler, shell, each with its timestamp. |
-| ![Topography](results/screenshots/03_topo.png) | **Topography.** Each task is a peak whose height is its CPU share; the coral path is the scheduler's real dispatch order and the arcs are real semaphore wake-ups. |
-| ![Processes](results/screenshots/04_processes.png) | **Processes.** Task table (state, priority, MLFQ level, CPU ticks, dispatches) and CPU share over the last 60 s. |
-| ![Memory](results/screenshots/05_memory.png) | **Memory.** A map of the 16 MiB heap in 128 slices from the kernel's `HEAPMAP` trace, with fragmentation and allocation counters. |
-| ![Journal](results/screenshots/06_journal.png) | **Journal.** Every spawn, exit, wake-up and policy event, as the kernel reported it. |
-| ![Code](results/screenshots/07_code.png) | **Code.** Edit a program in `kernel/src/programs/`; *Build & run* rebuilds the kernel on the host (labelled as such) and runs it. |
-| ![System](results/screenshots/09_system.png) | **System.** Reboot under any of the 8 policies and quantum; machine facts from the kernel. |
+| ![Lock screen](results/screenshots/02_lock.png) | **Lock screen.** The machine as it boots up, before the desktop. |
+| ![Desktop](results/screenshots/03_desktop.png) | **Desktop.** Menu bar, dock and widgets, every number live from the kernel. |
+| ![Topography](results/screenshots/05_topo.png) | **Topography.** Each task is a peak whose height is its CPU share; the coral path is the scheduler's real dispatch order and the arcs are real semaphore wake-ups. |
+| ![System calls](results/screenshots/06_syscalls.png) | **System calls.** Live `ecall`s from U-mode programs, and the kernel stopping a program that breaks the rules. |
+| ![Processes](results/screenshots/07_processes.png) | **Processes.** Task table (state, priority, MLFQ level, CPU ticks, dispatches) and CPU share over the last 60 s. |
+| ![Memory](results/screenshots/08_memory.png) | **Memory.** A map of the 16 MiB heap in 128 slices from the kernel's `HEAPMAP` trace, with fragmentation and allocation counters. |
+| ![Journal](results/screenshots/09_journal.png) | **Journal.** Every spawn, exit, wake-up and policy event, as the kernel reported it. |
+| ![Code](results/screenshots/10_code.png) | **Code.** Edit a program in `kernel/src/programs/`; *Build & run* rebuilds the kernel on the host (labelled as such) and runs it. |
+| ![Research](results/screenshots/12_research.png) | **Research.** The R3 fairness-vs-throughput results measured on this kernel. |
+| ![System](results/screenshots/13_system.png) | **System.** Reboot under any of the 8 policies and quantum; machine facts from the kernel. |
 
 Regenerate these pictures from the live system: `scripts/screenshots.py` (see its header).
 

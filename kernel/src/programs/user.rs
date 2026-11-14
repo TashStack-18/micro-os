@@ -24,7 +24,16 @@ pub fn main(args: &[&str]) -> i32 {
     };
     let arg = super::arg_u64(args, 1, default_arg) as usize;
     let calls_before = user::SYSCALLS.load(core::sync::atomic::Ordering::Relaxed);
-    let tid = match user::spawn("user", prog, arg) {
+    // A static task name per program, so ps, the journal and the desktop can tell runs apart.
+    let task_name = match name {
+        "hello" => "user-hello",
+        "priv" => "user-priv",
+        "badptr" => "user-badptr",
+        "unknown" => "user-unknown",
+        "spin" => "user-spin",
+        _ => "user",
+    };
+    let tid = match user::spawn(task_name, prog, arg) {
         Ok(t) => t,
         Err(e) => {
             println!("user: could not start: {:?}", e);
